@@ -77,6 +77,7 @@ class SvoV2 {
 	bool IsMoving();
 	void Stop();
 	void ZeroMe();
+	void SitMe();
 	void PrintMe();
 
 	private:
@@ -97,7 +98,15 @@ class SvoV2 {
 	int _GlobalZeroAngle;// will be hardcoded per id
 	int _GlobalMax;// will be hardcoded per id depends on mhysical constraints
 	int _GlobalMin;// will be hardcoded per id depends on mhysical constraints
-	 
+	const int shoulderZero = 200;
+	const int shoulderMin = 160;
+	const int shoulderMax = 250;
+	const int armZero = 200;
+	const int armMin = 152;
+	const int armMax = 248;
+	const int calfZero = 112;
+	const int calfMin = 110;
+	const int calfMax = 270;
 	};
 
 #endif

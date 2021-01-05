@@ -8,22 +8,18 @@
 #include "SvoV2.h"
 
 */
-
-
-
+// #define LOGDEBUG
 #if defined(ARDUINO_ARCH_AVR)
-
 #include <avr/interrupt.h>
 #include <Arduino.h>
 
 #include "SvoV2.h"
-
 #pragma region HarUino
 
 #define MCRO_usToTicks(_us)    (( clockCyclesPerMicrosecond()* _us) / 8)     // converts microseconds to tick (assumes prescale of 8)  // 12 Aug 2009
 #define MCRO_ticksToUs(_ticks) (( (unsigned)_ticks * 8)/ clockCyclesPerMicrosecond() ) // converts from ticks back to microseconds
 
-//#define LOGDEBUG
+
 
 #define TRIM_DURATION       2   // compensation ticks to trim adjust for digitalWrite delays // 12 August 2009
 
@@ -242,7 +238,6 @@ static boolean isTimerActive(timer16_Sequence_t timer)
 #pragma endregion
     /****************** end of static functions ******************************/
 #pragma region PUB
- 
 SvoV2::SvoV2(  )
     {
     if (svoV2Cnt < SVOV2_MAX_SERVOS) {
@@ -253,8 +248,6 @@ SvoV2::SvoV2(  )
     else
         this->svoV2Index = INVALID_SVOV2;  // too many svoV2sArra
     }
- 
-
 uint8_t SvoV2::AttachSelf( )
     {
     if (this->svoV2Index < SVOV2_MAX_SERVOS) {
@@ -272,8 +265,6 @@ uint8_t SvoV2::AttachSelf( )
         }
     return this->svoV2Index;
     }
-
-
 void SvoV2::Detach()
     {
     StaticSvoV2sArra[this->svoV2Index].Pin.pinActive = false;
@@ -282,8 +273,6 @@ void SvoV2::Detach()
         finISR(timer);
         }
     }
-
-
 void SvoV2::PrintMe() {
     
     Serial.print("  _id|"); Serial.print(this->_id);
@@ -292,48 +281,50 @@ void SvoV2::PrintMe() {
     Serial.println("");
 
     }
-
-/*
-          speed=0 - Full speed, identical to write
-          speed=1 - Minimum speed
-          speed=255 - Maximum speed
-*/
+//speed=0 - Full speed, identical to write ,speed=1 - Minimum speed , speed=255 - Maximum speed
 void SvoV2::Speedmove(int value, uint8_t speed) {
     // This fuction is a copy of write and witeMicroseconds but value will be saved
     // in target instead of in ticks in the servo structure and speed will be save
     // there too.
 
+    int valueOffsetted = OffsettedAngle(value);
+#ifdef LOGDEBUG
+    Serial.print("val=");   Serial.print(value); Serial.print("ofst="); Serial.println(valueOffsetted);
+#endif
     if (speed) {
-        if (value < SVOV2_MIN_PULSE_WIDTH) {
-        // treat values less than 544 as angles in degrees (valid values in microseconds are handled as microseconds)
-            if (value < 0) value = 0;
-            if (value > 270) value = 270;
-            value = map(value, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
+        if (valueOffsetted < SVOV2_MIN_PULSE_WIDTH) {
+        // treat valueOffsetteds less than 544 as angles in degrees (valid valueOffsetteds in microseconds are handled as microseconds)
+           
+           /* if (valueOffsetted < 0) valueOffsetted = 0;
+            if (valueOffsetted > 270) valueOffsetted = 270;*/
+            valueOffsetted = constrain(valueOffsetted, this->_GlobalMin, this->_GlobalMax);
+            valueOffsetted = map(valueOffsetted, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
+           
+           
             }
-            // calculate and store the values for the given channel
+            // calculate and store the valueOffsetteds for the given channel
         byte channel = this->svoV2Index;
         if ((channel >= 0) && (channel < SVOV2_MAX_SERVOS)) {   // ensure channel is valid
-            if (value < MCRO_SVOV2_MIN())          // ensure pulse width is valid
-                value = MCRO_SVOV2_MIN();
-            else if (value > MCRO_SVOV2_MAX())
-                value = MCRO_SVOV2_MAX();
+            if (valueOffsetted < MCRO_SVOV2_MIN())          // ensure pulse width is valid
+                valueOffsetted = MCRO_SVOV2_MIN();
+            else if (valueOffsetted > MCRO_SVOV2_MAX())
+                valueOffsetted = MCRO_SVOV2_MAX();
 
-            value = value - TRIM_DURATION;
-            value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
+            valueOffsetted = valueOffsetted - TRIM_DURATION;
+            valueOffsetted = MCRO_usToTicks(valueOffsetted);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
 
             // Set speed and direction
             uint8_t oldSREG = SREG;
             cli();
-            StaticSvoV2sArra[channel].target = value;
+            StaticSvoV2sArra[channel].target = valueOffsetted;
             StaticSvoV2sArra[channel].speed = speed;
             SREG = oldSREG;
             }
         }
     else {
-        Write(value);
+        Write(valueOffsetted);
         }
     }
-
 bool SvoV2::Attached()
     {
     return StaticSvoV2sArra[this->svoV2Index].Pin.pinActive;
@@ -358,17 +349,165 @@ void SvoV2::Stop() {
     this->Write(this->Read());
     }
 void  SvoV2::ZeroMe() {
-    this->Speedmove(this->_GlobalZeroAngle, 20);
-
+     
+    if (this->_id % 3 == 2) this->Speedmove(180, 0);
+    else
+        this->Speedmove(0, 0);
     }
 
+void  SvoV2::SitMe() {
+    if(this->_id%3==0) this->Speedmove(0, 0);
+    else
+        if (this->_id % 3 == 1) this->Speedmove(-48, 0);
+        else
+    this->Speedmove(40, 0);
+    }
 #pragma endregion
 #pragma region PRIV
+void SvoV2::SetupById(int argId) {
+    argId = constrain(argId, 0, 11);
+
+    switch (argId) {
+
+               // the this->shoulder group. 
+               // can be displaced 50 degrees out , and 40 in.
+               // works well to minimize legs touching eachother under the body.
+               // while having a larger out angle for more reach
+            case 0:
+                this->_myPin = 22;
+                this->_isForward = true; //positive Transvers this->should open the this->shoulder OUT away from body
+                this->_GlobalZeroAngle = this->shoulderZero;
+                this->_GlobalMax = this->shoulderMax;// can go to  260;
+                this->_GlobalMin = this->shoulderMin;// can go down to 150; before physical damage
+                break;
+            case 3:
+                this->_myPin = 23;
+                this->_isForward = false; //positive Transvers this->should open the this->shoulder OUT away from body
+                this->_GlobalZeroAngle = this->shoulderZero;
+                this->_GlobalMax = 250;// can go to  250 only !!!
+                this->_GlobalMin = this->shoulderMin;// can go down to 140; before  phd lol
+                break;
+            case 6:
+                this->_myPin = 28;
+                this->_isForward = false; //positive Transvers this->should open the this->shoulder OUT away from body
+                this->_GlobalZeroAngle = this->shoulderZero;
+                this->_GlobalMax = 250;
+                this->_GlobalMin = this->shoulderMin;
+                break;
+            case 9:
+                this->_myPin = 29;
+                this->_isForward = true; //positive Transvers this->should open the this->shoulder OUT away from body
+                this->_GlobalZeroAngle = this->shoulderZero;
+                this->_GlobalMax = 250;
+                this->_GlobalMin = 140;
+                break;
+//============================================================================
+                    //the arms group , this->should have a 48 degree displacement from center to minimize phd while keeping symetry ..
+
+
+            case 1:
+                this->_myPin = 24;
+                this->_isForward = true; //a 0 angle makes leg extended,  
+                this->_GlobalZeroAngle = this->armZero;
+                this->_GlobalMax = this->armMax;
+                this->_GlobalMin = this->armMin;
+                break;
+            case 4:
+                this->_myPin = 25;
+                this->_isForward = false; //a 0 angle makes leg extended,  
+                this->_GlobalZeroAngle = this->armZero;
+                this->_GlobalMax = this->armMax;
+                this->_GlobalMin = this->armMin;
+                break;
+            case 7:
+                this->_myPin = 30;
+                this->_isForward = false; //a 0 angle makes leg extended,  
+                this->_GlobalZeroAngle = this->armZero;
+                this->_GlobalMax = this->armMax;
+                this->_GlobalMin = this->armMin;
+                break;
+            case 10:
+                this->_myPin = 31;
+                this->_isForward = true; //a 0 angle makes leg extended,  
+                this->_GlobalZeroAngle = this->armZero;
+                this->_GlobalMax = this->armMax;
+                this->_GlobalMin = this->armMin;
+                break;
+//================================================================================
+                    //calves .. easy mode , servos are already placed correcty
+            case 2:
+                this->_myPin = 26;
+                this->_isForward = true; //180 irl = this->calfMin here   
+                this->_GlobalZeroAngle = this->calfZero;
+                this->_GlobalMax = this->calfMax;
+                this->_GlobalMin = this->calfMin;
+                break;
+            case 5:
+                this->_myPin = 27;
+                this->_isForward = true; //180 irl = this->calfMin here   
+                this->_GlobalZeroAngle = this->calfZero;
+                this->_GlobalMax = this->calfMax;
+                this->_GlobalMin = this->calfMin;
+                break;
+            case 8:
+                this->_myPin = 32;
+                this->_isForward = true; //180 irl = this->calfMin here   
+                this->_GlobalZeroAngle = this->calfZero;
+                this->_GlobalMax = this->calfMax;
+                this->_GlobalMin = this->calfMin;
+                break;
+            case 11:
+                this->_myPin = 33;
+                this->_isForward = true; //180 irl = this->calfMin here   
+                this->_GlobalZeroAngle = this->calfZero;
+                this->_GlobalMax = this->calfMax;
+                this->_GlobalMin = this->calfMin;
+                break;
+
+
+
+        }//xSwitch
+
+    this->_id = argId;
+    }
+int SvoV2::OffsettedAngle(int argAngle) {
+    int ConvertedAngle = 0;
+
+    if (this->_id % 3 == 2) {
+        //180 input -> 110
+        //40 input ->270
+        //160 input = 180-160 =40 +110 =150
+        argAngle = constrain(argAngle, 40, 180);
+        if (_isForward)
+            {
+           
+            ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+            }
+        else {
+            ConvertedAngle = this->_GlobalMin-( 180 - argAngle );
+            }
+        
+        }
+    else
+    if ( _isForward  ) 
+        {
+        ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+        }
+    else
+       // if (this->_isForward == false)
+            {
+            ConvertedAngle = this->_GlobalZeroAngle - argAngle;
+            }
+   ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
+#ifdef LOGDEBUG
+   Serial.print("conv");  Serial.println(ConvertedAngle);
+#endif // LOGDEBUG
+    return ConvertedAngle;
+    }
 int SvoV2::Read() // return the value as degrees
     {
     return  map(this->ReadMicroseconds() + 1, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX(), 0, 270);
     }
-
 int SvoV2::ReadMicroseconds()
     {
     unsigned int pulsewidth;
@@ -379,13 +518,8 @@ int SvoV2::ReadMicroseconds()
 
     return pulsewidth;
     }
-
-
 void SvoV2::WriteMicroseconds(int value)
     {
-#ifdef LOGDEBUG
-    Serial.print("wroteMs =");  Serial.println(value);
-#endif
       // calculate and store the values for the given channel
     byte channel = this->svoV2Index;
     StaticSvoV2sArra[channel].value = value;
@@ -411,131 +545,6 @@ void SvoV2::WriteMicroseconds(int value)
         }
 
     }
-
-
-
-
-void SvoV2::SetupById(int argId) {
-    argId = constrain(argId, 0, 11);
-
-    switch (argId) {
-
-               // the shoulder group. 
-               // can be displaced 50 degrees out , and 40 in.
-               // works well to minimize legs touching eachother under the body.
-               // while having a larger out angle for more reach
-            case 0:
-                this->_myPin = 22;
-                this->_isForward = true; //positive Transvers should open the shoulder OUT away from body
-                this->_GlobalZeroAngle = 200;
-            #ifdef LOGDEBUG
-                Serial.print(" global zwrofor id0="); Serial.println(_GlobalZeroAngle);
-            #endif
-                this->_GlobalMax = 250;// can go to  260;
-                this->_GlobalMin = 160;// can go down to 150; before physical damage
-                break;
-            case 3:
-                this->_myPin = 23;
-                this->_isForward = false; //positive Transvers should open the shoulder OUT away from body
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 250;// can go to  250 only !!!
-                this->_GlobalMin = 160;// can go down to 140; before  phd lol
-                break;
-            case 6:
-                this->_myPin = 28;
-                this->_isForward = false; //positive Transvers should open the shoulder OUT away from body
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 250;
-                this->_GlobalMin = 160;
-                break;
-            case 9:
-                this->_myPin = 29;
-                this->_isForward = true; //positive Transvers should open the shoulder OUT away from body
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 250;
-                this->_GlobalMin = 140;
-                break;
-//============================================================================
-                    //the arms group , should have a 48 degree displacement from center to minimize phd while keeping symetry ..
-
-
-            case 1:
-                this->_myPin = 24;
-                this->_isForward = true; //a 0 angle makes leg extended,  
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 248;
-                this->_GlobalMin = 152;
-                break;
-            case 4:
-                this->_myPin = 25;
-                this->_isForward = true; //a 0 angle makes leg extended,  
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 248;
-                this->_GlobalMin = 152;
-                break;
-            case 7:
-                this->_myPin = 30;
-                this->_isForward = false; //a 0 angle makes leg extended,  
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 248;
-                this->_GlobalMin = 152;
-                break;
-            case 10:
-                this->_myPin = 31;
-                this->_isForward = false; //a 0 angle makes leg extended,  
-                this->_GlobalZeroAngle = 200;
-                this->_GlobalMax = 260;
-                this->_GlobalMin = 150;
-                break;
-//================================================================================
-                    //calves .. easy mode , servos are already placed correcty
-            case 2:
-                this->_myPin = 26;
-                this->_isForward = true; //180 irl = 135 here   
-                this->_GlobalZeroAngle = 110;
-                this->_GlobalMax = 270;
-                this->_GlobalMin = 135;
-                break;
-            case 5:
-                this->_myPin = 27;
-                this->_isForward = true; //180 irl = 135 here   
-                this->_GlobalZeroAngle = 110;
-                this->_GlobalMax = 270;
-                this->_GlobalMin = 135;
-                break;
-            case 8:
-                this->_myPin = 32;
-                this->_isForward = true; //180 irl = 135 here   
-                this->_GlobalZeroAngle = 110;
-                this->_GlobalMax = 270;
-                this->_GlobalMin = 135;
-                break;
-            case 11:
-                this->_myPin = 33;
-                this->_isForward = true; //180 irl = 135 here   
-                this->_GlobalZeroAngle = 110;
-                this->_GlobalMax = 270;
-                this->_GlobalMin = 135;
-                break;
-
-
-
-        }//xSwitch
-
-    this->_id = argId;
-    }
-    
-int SvoV2::OffsettedAngle(int argAngle) {
-    int ConvertedAngle = 0;
-    if (this->_isForward == true) {
-        ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-        }
-    else
-        if (this->_isForward == false) {
-            ConvertedAngle = this->_GlobalZeroAngle - argAngle;
-            }
-    return ConvertedAngle;
-    }
 void SvoV2::Write(int value)
     {
     byte channel = this->svoV2Index;
@@ -557,11 +566,5 @@ void SvoV2::Write(int value)
         }
     this->WriteMicroseconds(value);
     }
- 
 #pragma endregion
-
- 
 #endif // ARDUINO_ARCH_AVR
-
-
-
