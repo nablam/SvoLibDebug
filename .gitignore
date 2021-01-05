@@ -4,32 +4,32 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
+/MainSkech_SvoLibDebugINO/*.rsuser
+/MainSkech_SvoLibDebugINO/*.suo
+/MainSkech_SvoLibDebugINO/*.user
+/MainSkech_SvoLibDebugINO/*.userosscache
+/MainSkech_SvoLibDebugINO/*.sln.docstates
 
 # User-specific files (MonoDevelop/Xamarin Studio)
-*.userprefs
+/MainSkech_SvoLibDebugINO/*.userprefs
 
 # Mono auto generated files
-mono_crash.*
+/MainSkech_SvoLibDebugINO/mono_crash.*
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+/MainSkech_SvoLibDebugINO/[Dd]ebug/
+/MainSkech_SvoLibDebugINO/[Dd]ebugPublic/
+/MainSkech_SvoLibDebugINO/[Rr]elease/
+/MainSkech_SvoLibDebugINO/[Rr]eleases/
+/MainSkech_SvoLibDebugINO/x64/
+/MainSkech_SvoLibDebugINO/x86/
+/MainSkech_SvoLibDebugINO/[Aa][Rr][Mm]/
+/MainSkech_SvoLibDebugINO/[Aa][Rr][Mm]64/
+/MainSkech_SvoLibDebugINO/bld/
+/MainSkech_SvoLibDebugINO/[Bb]in/
+/MainSkech_SvoLibDebugINO/[Oo]bj/
+/MainSkech_SvoLibDebugINO/[Ll]og/
+/MainSkech_SvoLibDebugINO/[Ll]ogs/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -65,56 +65,56 @@ artifacts/
 StyleCopReport.xml
 
 # Files built by Visual Studio
-*_i.c
-*_p.c
-*_h.h
-*.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
-*.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*_wpftmp.csproj
-*.log
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
+/MainSkech_SvoLibDebugINO/*_i.c
+/MainSkech_SvoLibDebugINO/*_p.c
+/MainSkech_SvoLibDebugINO/*_h.h
+/MainSkech_SvoLibDebugINO/*.ilk
+/MainSkech_SvoLibDebugINO/*.meta
+/MainSkech_SvoLibDebugINO/*.obj
+/MainSkech_SvoLibDebugINO/*.iobj
+/MainSkech_SvoLibDebugINO/*.pch
+/MainSkech_SvoLibDebugINO/*.pdb
+/MainSkech_SvoLibDebugINO/*.ipdb
+/MainSkech_SvoLibDebugINO/*.pgc
+/MainSkech_SvoLibDebugINO/*.pgd
+/MainSkech_SvoLibDebugINO/*.rsp
+/MainSkech_SvoLibDebugINO/*.sbr
+/MainSkech_SvoLibDebugINO/*.tlb
+/MainSkech_SvoLibDebugINO/*.tli
+/MainSkech_SvoLibDebugINO/*.tlh
+/MainSkech_SvoLibDebugINO/*.tmp
+/MainSkech_SvoLibDebugINO/*.tmp_proj
+/MainSkech_SvoLibDebugINO/*_wpftmp.csproj
+/MainSkech_SvoLibDebugINO/*.log
+/MainSkech_SvoLibDebugINO/*.vspscc
+/MainSkech_SvoLibDebugINO/*.vssscc
+/MainSkech_SvoLibDebugINO/.builds
+/MainSkech_SvoLibDebugINO/*.pidb
+/MainSkech_SvoLibDebugINO/*.svclog
+/MainSkech_SvoLibDebugINO/*.scc
 
 # Chutzpah Test files
 _Chutzpah*
 
 # Visual C++ cache files
-ipch/
-*.aps
-*.ncb
-*.opendb
-*.opensdf
-*.sdf
-*.cachefile
-*.VC.db
-*.VC.VC.opendb
+/MainSkech_SvoLibDebugINO/ipch/
+/MainSkech_SvoLibDebugINO/*.aps
+/MainSkech_SvoLibDebugINO/*.ncb
+/MainSkech_SvoLibDebugINO/*.opendb
+/MainSkech_SvoLibDebugINO/*.opensdf
+/MainSkech_SvoLibDebugINO/*.sdf
+/MainSkech_SvoLibDebugINO/*.cachefile
+/MainSkech_SvoLibDebugINO/*.VC.db
+/MainSkech_SvoLibDebugINO/*.VC.VC.opendb
 
 # Visual Studio profiler
-*.psess
-*.vsp
-*.vspx
-*.sap
+/MainSkech_SvoLibDebugINO/*.psess
+/MainSkech_SvoLibDebugINO/*.vsp
+/MainSkech_SvoLibDebugINO/*.vspx
+/MainSkech_SvoLibDebugINO/*.sap
 
 # Visual Studio Trace Files
-*.e2e
+/MainSkech_SvoLibDebugINO/*.e2e
 
 # TFS 2012 Local Workspace
 $tf/
@@ -134,12 +134,12 @@ _TeamCity*
 *.dotCover
 
 # AxoCover is a Code Coverage Tool
-.axoCover/*
-!.axoCover/settings.json
+/MainSkech_SvoLibDebugINO/.axoCover/*
+/MainSkech_SvoLibDebugINO/!.axoCover/settings.json
 
 # Visual Studio code coverage results
-*.coverage
-*.coveragexml
+/MainSkech_SvoLibDebugINO/*.coverage
+/MainSkech_SvoLibDebugINO/*.coveragexml
 
 # NCrunch
 _NCrunch_*
@@ -183,42 +183,42 @@ publish/
 PublishScripts/
 
 # NuGet Packages
-*.nupkg
+/MainSkech_SvoLibDebugINO/*.nupkg
 # NuGet Symbol Packages
-*.snupkg
+/MainSkech_SvoLibDebugINO/*.snupkg
 # The packages folder can be ignored because of Package Restore
-**/[Pp]ackages/*
+/MainSkech_SvoLibDebugINO/**/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
-!**/[Pp]ackages/build/
+/MainSkech_SvoLibDebugINO/!**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
-*.nuget.props
-*.nuget.targets
+/MainSkech_SvoLibDebugINO/*.nuget.props
+/MainSkech_SvoLibDebugINO/*.nuget.targets
 
 # Microsoft Azure Build Output
-csx/
-*.build.csdef
+/MainSkech_SvoLibDebugINO/csx/
+/MainSkech_SvoLibDebugINO/*.build.csdef
 
 # Microsoft Azure Emulator
-ecf/
-rcf/
+/MainSkech_SvoLibDebugINO/ecf/
+/MainSkech_SvoLibDebugINO/rcf/
 
 # Windows Store app package directories and files
-AppPackages/
-BundleArtifacts/
-Package.StoreAssociation.xml
-_pkginfo.txt
-*.appx
-*.appxbundle
-*.appxupload
+/MainSkech_SvoLibDebugINO/AppPackages/
+/MainSkech_SvoLibDebugINO/BundleArtifacts/
+/MainSkech_SvoLibDebugINO/Package.StoreAssociation.xml
+/MainSkech_SvoLibDebugINO/_pkginfo.txt
+/MainSkech_SvoLibDebugINO/*.appx
+/MainSkech_SvoLibDebugINO/*.appxbundle
+/MainSkech_SvoLibDebugINO/*.appxupload
 
 # Visual Studio cache files
 # files ending in .cache can be ignored
-*.[Cc]ache
+/MainSkech_SvoLibDebugINO/*.[Cc]ache
 # but keep track of directories ending in .cache
 !?*.[Cc]ache/
-
+/MainSkech_SvoLibDebugINO/!?*.[Cc]ache/
 # Others
 ClientBin/
 ~$*
@@ -348,3 +348,4 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/MainSkech_SvoLibDebugINO/__vm
