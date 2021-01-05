@@ -18,6 +18,8 @@
 
 #include "SvoV2.h"
 
+#pragma region HarUino
+
 #define MCRO_usToTicks(_us)    (( clockCyclesPerMicrosecond()* _us) / 8)     // converts microseconds to tick (assumes prescale of 8)  // 12 Aug 2009
 #define MCRO_ticksToUs(_ticks) (( (unsigned)_ticks * 8)/ clockCyclesPerMicrosecond() ) // converts from ticks back to microseconds
 
@@ -237,59 +239,21 @@ static boolean isTimerActive(timer16_Sequence_t timer)
     return false;
     }
 
-
+#pragma endregion
     /****************** end of static functions ******************************/
 #pragma region PUB
-SvoV2::SvoV2()
+ 
+SvoV2::SvoV2(  )
     {
     if (svoV2Cnt < SVOV2_MAX_SERVOS) {
-        this->svoV2Index = svoV2Cnt++;                    // assign a sevo index to this instance
-        StaticSvoV2sArra[this->svoV2Index].ticks = MCRO_usToTicks(SVOV2_DEFAULT_PULSE_WIDTH);
-    #ifdef  LOGDEBUG
-        Serial.println("new servo");// store default values  - 12 Aug 2009
-    #endif // LOG
-        }
-    else
-        this->svoV2Index = INVALID_SVOV2;  // too many svoV2sArra
-    }
-
-SvoV2::SvoV2(bool argIsUsingOffest )
-    {
-    if (svoV2Cnt < SVOV2_MAX_SERVOS) {
-        this->_useOffsetAngle = argIsUsingOffest;
-        this->svoV2Index = svoV2Cnt++;                    // assign a sevo index to this instance
+        this->svoV2Index = svoV2Cnt++;// assign a sevo index to this instance
         StaticSvoV2sArra[this->svoV2Index].ticks = MCRO_usToTicks(SVOV2_DEFAULT_PULSE_WIDTH);
         SetupById(this->svoV2Index);
-    #ifdef  LOGDEBUG
-        Serial.println("new servo");// store default values  - 12 Aug 2009
-    #endif // LOG
         }
     else
         this->svoV2Index = INVALID_SVOV2;  // too many svoV2sArra
     }
-
-uint8_t SvoV2::attachV1(int pin)
-    {
-    return this->attachV1(pin, SVOV2_MIN_PULSE_WIDTH, SVOV2_MAX_PULSE_WIDTH);
-    }
-
-uint8_t SvoV2::attachV1(int pin, int min, int max)
-    {
-    if (this->svoV2Index < SVOV2_MAX_SERVOS) {
-        pinMode(pin, OUTPUT);                                   // set servo pin to output
-        StaticSvoV2sArra[this->svoV2Index].Pin.pinNum = pin;
-        // todo min/max check: abs(min - MIN_PULSE_WIDTH) /4 < 128 
-        this->_minPwm = (SVOV2_MIN_PULSE_WIDTH - min) / RESOLUTION; //resolution of min/max is 4 uS
-        this->_maxPwm = (SVOV2_MAX_PULSE_WIDTH - max) / RESOLUTION;
-        // initialize the timer if it has not already been initialized 
-        timer16_Sequence_t timer = MCRO_SVOV2_INDEX_TO_TIMER(svoV2Index);
-        if (isTimerActive(timer) == false)
-            initISR(timer);
-        StaticSvoV2sArra[this->svoV2Index].Pin.pinActive = true;  // this must be set after the check for isTimerActive
-        }
-    return this->svoV2Index;
-    }
-
+ 
 
 uint8_t SvoV2::AttachSelf( )
     {
@@ -310,11 +274,6 @@ uint8_t SvoV2::AttachSelf( )
     }
 
 
-//void SvoV2::InitPositions() {
-//    _curPos = this->ReadMicroseconds();
-//    _lastPos = _curPos;
-//    _nextPos = _curPos;
-//    }
 void SvoV2::Detach()
     {
     StaticSvoV2sArra[this->svoV2Index].Pin.pinActive = false;
@@ -324,27 +283,7 @@ void SvoV2::Detach()
         }
     }
 
-void SvoV2::Write(int value)
-    {
-    byte channel = this->svoV2Index;
-    StaticSvoV2sArra[channel].value = value;
-    if (value < SVOV2_MIN_PULSE_WIDTH)
-        {  // treat values less than 544 as angles in degrees (valid values in microseconds are handled as microseconds)
-        if (value < 0) value = 0;
-        if (value > 270) value = 270;
 
-        value = map(value, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
-    #ifdef  LOGDEBUG
-        Serial.print("min ");    Serial.print(_minPwm);    Serial.print("  ");    Serial.print("max "); Serial.println(_maxPwm);
-        Serial.print("MIN ");    Serial.print(MCRO_SVOV2_MIN());    Serial.print("  ");    Serial.print("AMX "); Serial.println(MCRO_SVOV2_MAX());
-        Serial.print("wroteANGLE =");  Serial.println(value);
-
-    #endif // LOG
-
-
-        }
-    this->WriteMicroseconds(value);
-    }
 void SvoV2::PrintMe() {
     
     Serial.print("  _id|"); Serial.print(this->_id);
@@ -354,54 +293,11 @@ void SvoV2::PrintMe() {
 
     }
 
-void SvoV2::WriteMicroseconds(int value)
-    {
-#ifdef LOGDEBUG
-    Serial.print("wroteMs =");  Serial.println(value);
-#endif
-      // calculate and store the values for the given channel
-    byte channel = this->svoV2Index;
-    StaticSvoV2sArra[channel].value = value;
-    if ((channel < SVOV2_MAX_SERVOS))   // ensure channel is valid
-        {
-        if (value < MCRO_SVOV2_MIN())          // ensure pulse width is valid
-            value = MCRO_SVOV2_MIN();
-        else if (value > MCRO_SVOV2_MAX())
-            value = MCRO_SVOV2_MAX();
-
-        value = value - TRIM_DURATION;
-        value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
-
-        uint8_t oldSREG = SREG;
-        cli();
-        StaticSvoV2sArra[channel].ticks = value;
-        // Disable slowmove logic.
-        StaticSvoV2sArra[channel].speed = 0;
-        // End of Extension for slowmove
-        SREG = oldSREG;
-
-
-        }
-
-    }
-
-// Extension for slowmove
 /*
-
           speed=0 - Full speed, identical to write
           speed=1 - Minimum speed
           speed=255 - Maximum speed
 */
-
-void SvoV2::SpeedMoveFromOffset(int value, uint8_t speed) {
-
-   
-
-#ifdef LOGDEBUG     
-#endif
-    }
-
-
 void SvoV2::Speedmove(int value, uint8_t speed) {
     // This fuction is a copy of write and witeMicroseconds but value will be saved
     // in target instead of in ticks in the servo structure and speed will be save
@@ -437,29 +333,11 @@ void SvoV2::Speedmove(int value, uint8_t speed) {
         Write(value);
         }
     }
-    // End of Extension for slowmove
-
-int SvoV2::Read() // return the value as degrees
-    {
-    return  map(this->ReadMicroseconds() + 1, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX(), 0, 270);
-    }
-
-int SvoV2::ReadMicroseconds()
-    {
-    unsigned int pulsewidth;
-    if (this->svoV2Index != INVALID_SVOV2)
-        pulsewidth = MCRO_ticksToUs(StaticSvoV2sArra[this->svoV2Index].ticks) + TRIM_DURATION;   // 12 aug 2009
-    else
-        pulsewidth = 0;
-
-    return pulsewidth;
-    }
 
 bool SvoV2::Attached()
     {
     return StaticSvoV2sArra[this->svoV2Index].Pin.pinActive;
     }
-
 bool SvoV2::IsMoving() {
     byte channel = this->svoV2Index;
     int value = StaticSvoV2sArra[channel].value;
@@ -479,60 +357,67 @@ bool SvoV2::IsMoving() {
 void SvoV2::Stop() {
     this->Write(this->Read());
     }
-
-
 void  SvoV2::ZeroMe() {
     this->Speedmove(this->_GlobalZeroAngle, 20);
 
     }
 
-
-int SvoV2::GetGlobalZero() {
-    return this->_GlobalZeroAngle;
-    }
-
-int SvoV2::GetId() {
-    return this->_id;
-    }
-
 #pragma endregion
 #pragma region PRIV
-//int SvoV2::offsettedAngle(int argAngle) {
-//    int ConvertedAngle = 0;
-//  
-//    if (this->_isForward == true) {
-//        ConvertedAngle = this->_midAngle + argAngle;
-//        }
-//    else
-//        if (this->_isForward == false) {
-//            ConvertedAngle = this->_midAngle - argAngle;
-//            }
-//
-//    return ConvertedAngle;
-//    }
+int SvoV2::Read() // return the value as degrees
+    {
+    return  map(this->ReadMicroseconds() + 1, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX(), 0, 270);
+    }
+
+int SvoV2::ReadMicroseconds()
+    {
+    unsigned int pulsewidth;
+    if (this->svoV2Index != INVALID_SVOV2)
+        pulsewidth = MCRO_ticksToUs(StaticSvoV2sArra[this->svoV2Index].ticks) + TRIM_DURATION;   // 12 aug 2009
+    else
+        pulsewidth = 0;
+
+    return pulsewidth;
+    }
+
+
+void SvoV2::WriteMicroseconds(int value)
+    {
+#ifdef LOGDEBUG
+    Serial.print("wroteMs =");  Serial.println(value);
+#endif
+      // calculate and store the values for the given channel
+    byte channel = this->svoV2Index;
+    StaticSvoV2sArra[channel].value = value;
+    if ((channel < SVOV2_MAX_SERVOS))   // ensure channel is valid
+        {
+        if (value < MCRO_SVOV2_MIN())          // ensure pulse width is valid
+            value = MCRO_SVOV2_MIN();
+        else if (value > MCRO_SVOV2_MAX())
+            value = MCRO_SVOV2_MAX();
+
+        value = value - TRIM_DURATION;
+        value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
+
+        uint8_t oldSREG = SREG;
+        cli();
+        StaticSvoV2sArra[channel].ticks = value;
+        // Disable slowmove logic.
+        StaticSvoV2sArra[channel].speed = 0;
+        // End of Extension for slowmove
+        SREG = oldSREG;
+
+
+        }
+
+    }
 
 
 
-//int SvoV2::OffsettedUs(int argUS) {
-//     
-//    int ConvertedUS = 0;
-//    if (this->_isForward == true) {
-//        ConvertedUS = _midUs + argUS;
-//        }
-//    else
-//        if (this->_isForward == false) {
-//            ConvertedUS = _midUs - argUS;
-//            }
-//
-//    return ConvertedUS;
-//    }
-#pragma endregion
 
-#pragma region Locals
-//local
 void SvoV2::SetupById(int argId) {
     argId = constrain(argId, 0, 11);
-   
+
     switch (argId) {
 
                // the shoulder group. 
@@ -540,7 +425,7 @@ void SvoV2::SetupById(int argId) {
                // works well to minimize legs touching eachother under the body.
                // while having a larger out angle for more reach
             case 0:
-                this->_myPin =22;
+                this->_myPin = 22;
                 this->_isForward = true; //positive Transvers should open the shoulder OUT away from body
                 this->_GlobalZeroAngle = 200;
             #ifdef LOGDEBUG
@@ -550,21 +435,21 @@ void SvoV2::SetupById(int argId) {
                 this->_GlobalMin = 160;// can go down to 150; before physical damage
                 break;
             case 3:
-                this->_myPin =23;
+                this->_myPin = 23;
                 this->_isForward = false; //positive Transvers should open the shoulder OUT away from body
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 250;// can go to  250 only !!!
                 this->_GlobalMin = 160;// can go down to 140; before  phd lol
                 break;
             case 6:
-                this->_myPin =28;
+                this->_myPin = 28;
                 this->_isForward = false; //positive Transvers should open the shoulder OUT away from body
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 250;
                 this->_GlobalMin = 160;
                 break;
             case 9:
-                this->_myPin =29;
+                this->_myPin = 29;
                 this->_isForward = true; //positive Transvers should open the shoulder OUT away from body
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 250;
@@ -575,28 +460,28 @@ void SvoV2::SetupById(int argId) {
 
 
             case 1:
-                this->_myPin =24;
+                this->_myPin = 24;
                 this->_isForward = true; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 248;
                 this->_GlobalMin = 152;
                 break;
             case 4:
-                this->_myPin =25;
+                this->_myPin = 25;
                 this->_isForward = true; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 248;
                 this->_GlobalMin = 152;
                 break;
             case 7:
-                this->_myPin =30;
+                this->_myPin = 30;
                 this->_isForward = false; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 248;
                 this->_GlobalMin = 152;
                 break;
             case 10:
-                this->_myPin =31;
+                this->_myPin = 31;
                 this->_isForward = false; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = 200;
                 this->_GlobalMax = 260;
@@ -605,103 +490,77 @@ void SvoV2::SetupById(int argId) {
 //================================================================================
                     //calves .. easy mode , servos are already placed correcty
             case 2:
-                this->_myPin =26;
+                this->_myPin = 26;
                 this->_isForward = true; //180 irl = 135 here   
                 this->_GlobalZeroAngle = 110;
                 this->_GlobalMax = 270;
                 this->_GlobalMin = 135;
                 break;
             case 5:
-                this->_myPin =27;
+                this->_myPin = 27;
                 this->_isForward = true; //180 irl = 135 here   
                 this->_GlobalZeroAngle = 110;
                 this->_GlobalMax = 270;
                 this->_GlobalMin = 135;
                 break;
             case 8:
-                this->_myPin =32;
+                this->_myPin = 32;
                 this->_isForward = true; //180 irl = 135 here   
                 this->_GlobalZeroAngle = 110;
                 this->_GlobalMax = 270;
                 this->_GlobalMin = 135;
                 break;
             case 11:
-                this->_myPin =33;
+                this->_myPin = 33;
                 this->_isForward = true; //180 irl = 135 here   
                 this->_GlobalZeroAngle = 110;
                 this->_GlobalMax = 270;
                 this->_GlobalMin = 135;
                 break;
 
-               
+
 
         }//xSwitch
 
-        this->_id = argId;
+    this->_id = argId;
     }
-//
-//int SvoV2::AssignPin(int argId) {
-//    int tempin = 0;
-//
-//    switch (argId) {
-//
-//              // the shoulder group. 
-//              // can be displaced 50 degrees out , and 40 in.
-//              // works well to minimize legs touching eachother under the body.
-//              // while having a larger out angle for more reach
-//            case 0:
-//                tempin = 22;
-//            #ifdef LOGDEBUG
-//                Serial.println(" assigend servo 0 pin 22");
-//            #endif
-//                break;
-//            case 3:
-//                tempin = 23;
-//                break;
-//            case 6:
-//                tempin = 28;
-//                break;
-//            case 9:
-//                tempin = 29;
-//                break;
-////============================================================================
-//                    //the arms group , should have a 48 degree displacement from center to minimize phd while keeping symetry ..
-//
-//
-//            case 1:
-//                tempin = 24;
-//            #ifdef LOGDEBUG
-//                Serial.println(" assigend servo 1 pin 2");
-//            #endif
-//                break;
-//            case 4:
-//                tempin = 25;
-//                break;
-//            case 7:
-//                tempin = 30;
-//                break;
-//            case 10:
-//                tempin = 31;
-//                break;
-////================================================================================
-//                    //calves .. easy mode , servos are already placed correcty
-//            case 2:
-//                tempin = 26;
-//                break;
-//            case 5:
-//                tempin = 27;
-//                break;
-//            case 8:
-//                tempin = 32;
-//                break;
-//            case 11:
-//                tempin = 33;
-//
-//                break;
-//        }//xSwitch
-//    return tempin;
-//    }
+    
+int SvoV2::OffsettedAngle(int argAngle) {
+    int ConvertedAngle = 0;
+    if (this->_isForward == true) {
+        ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+        }
+    else
+        if (this->_isForward == false) {
+            ConvertedAngle = this->_GlobalZeroAngle - argAngle;
+            }
+    return ConvertedAngle;
+    }
+void SvoV2::Write(int value)
+    {
+    byte channel = this->svoV2Index;
+    StaticSvoV2sArra[channel].value = value;
+    if (value < SVOV2_MIN_PULSE_WIDTH)
+        {  // treat values less than 544 as angles in degrees (valid values in microseconds are handled as microseconds)
+        if (value < 0) value = 0;
+        if (value > 270) value = 270;
+
+        value = map(value, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
+    #ifdef  LOGDEBUG
+        Serial.print("min ");    Serial.print(_minPwm);    Serial.print("  ");    Serial.print("max "); Serial.println(_maxPwm);
+        Serial.print("MIN ");    Serial.print(MCRO_SVOV2_MIN());    Serial.print("  ");    Serial.print("AMX "); Serial.println(MCRO_SVOV2_MAX());
+        Serial.print("wroteANGLE =");  Serial.println(value);
+
+    #endif // LOG
+
+
+        }
+    this->WriteMicroseconds(value);
+    }
+ 
 #pragma endregion
+
+ 
 #endif // ARDUINO_ARCH_AVR
 
 
