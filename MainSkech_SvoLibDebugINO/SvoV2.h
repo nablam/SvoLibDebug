@@ -93,7 +93,13 @@ class SvoV2 {
 	int _maxPwm;		// maximum is this value times 4 added to SvoV2_MAX_PULSE_WIDTH  
 	bool _isForward;
 	uint8_t _myPin;
-	 
+	int _currPwm;
+	int _nextPwm;
+	int _Adjustedspeed; //leg will adjust this to maintain even servo mtion. most likely a sealing to not exced
+	// leg is given xyz . 
+	//it calculates a0 a1 a2
+	//
+
 	uint8_t _id;
 	int _GlobalZeroAngle;// will be hardcoded per id
 	int _GlobalMax;// will be hardcoded per id depends on mhysical constraints

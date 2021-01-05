@@ -407,28 +407,28 @@ void SvoV2::SetupById(int argId) {
 
             case 1:
                 this->_myPin = 24;
-                this->_isForward = true; //a 0 angle makes leg extended,  
+                this->_isForward = false; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = this->armZero;
                 this->_GlobalMax = this->armMax;
                 this->_GlobalMin = this->armMin;
                 break;
             case 4:
                 this->_myPin = 25;
-                this->_isForward = false; //a 0 angle makes leg extended,  
+                this->_isForward = true; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = this->armZero;
                 this->_GlobalMax = this->armMax;
                 this->_GlobalMin = this->armMin;
                 break;
             case 7:
                 this->_myPin = 30;
-                this->_isForward = false; //a 0 angle makes leg extended,  
+                this->_isForward = true; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = this->armZero;
                 this->_GlobalMax = this->armMax;
                 this->_GlobalMin = this->armMin;
                 break;
             case 10:
                 this->_myPin = 31;
-                this->_isForward = true; //a 0 angle makes leg extended,  
+                this->_isForward = false; //a 0 angle makes leg extended,  
                 this->_GlobalZeroAngle = this->armZero;
                 this->_GlobalMax = this->armMax;
                 this->_GlobalMin = this->armMin;
