@@ -5,6 +5,7 @@
 */
 
 // the setup function runs once when you press reset or power the board
+#include "SvoV2.h"
 void setup() {
 	Serial.begin(115200);
 }
