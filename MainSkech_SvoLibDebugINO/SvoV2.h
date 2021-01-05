@@ -12,28 +12,28 @@
 #include <inttypes.h>
 // Say which 16 bit timers can be used and in what order
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define _useTmr5
-#define _useTmr1
-#define _useTmr3
-#define _useTmr4
+#define _Uses_Tmr5
+#define _Uses_Tmr1
+#define _Uses_Tmr3
+#define _Uses_Tmr4
 typedef enum { _timer5, _timer1, _timer3, _timer4, _Nbr_16timers } timer16_Sequence_t;
 
 #elif defined(__AVR_ATmega32U4__)
-#define _useTmr1
+#define _Uses_Tmr1
 typedef enum { _timer1, _Nbr_16timers } timer16_Sequence_t;
 
 #elif defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
-#define _useTmr3
-#define _useTmr1
+#define _Uses_Tmr3
+#define _Uses_Tmr1
 typedef enum { _timer3, _timer1, _Nbr_16timers } timer16_Sequence_t;
 
 #elif defined(__AVR_ATmega128__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2561__)
-#define _useTmr3
-#define _useTmr1
+#define _Uses_Tmr3
+#define _Uses_Tmr1
 typedef enum { _timer3, _timer1, _Nbr_16timers } timer16_Sequence_t;
 
 #else  // everything else
-#define _useTmr1
+#define _Uses_Tmr1
 typedef enum { _timer1, _Nbr_16timers } timer16_Sequence_t;
 #endif
 
@@ -51,13 +51,11 @@ typedef enum { _timer1, _Nbr_16timers } timer16_Sequence_t;
 #define INVALID_SVOV2         255    
 #define RESOLUTION         4   
 
-#define TwoHundred 200
-#define OneHundredTen 110
 #if !defined(ARDUINO_ARCH_STM32F4)
 
 typedef struct {
-	uint8_t pinNum : 6;             // a pin number from 0 to 63
-	uint8_t pinActive : 1;             // true if this channel is enabled, pin not pulsed if false
+	uint8_t pinNum : 6;// a pin number from 0 to 63
+	uint8_t pinActive : 1;// true if this channel is enabled, pin not pulsed if false
 	} SvoV2Pin_t;
 
 typedef struct {
@@ -71,13 +69,12 @@ typedef struct {
 class SvoV2 {
 	public:
 	SvoV2();
-	SvoV2(int argID);
-	//uint8_t Attach(int pin, int argmin, int argmax, bool argIsforward, int argMid);
-	/*uint8_t Attach(int pin, bool argIsforward);*/
+	SvoV2(bool argIsUsingOffset);
+	uint8_t AttachSelf();
+
 	uint8_t attachV1(int pin);
 	uint8_t attachV1(int pin, int min, int max);
-	uint8_t Attach(int argId);
-	int ConvertDegreesToPulsw(int argDegrees);
+	//int ConvertDegreesToPulsw(int argDegrees);
 	void Detach();
 	void Write(int value);
 	//void Write(int value, int rate);
@@ -92,8 +89,10 @@ class SvoV2 {
 	void Stop();
 	void ZeroMe();
 
+	void PrintMe();
+
 	void SpeedMoveFromOffset(int value, uint8_t speed);
-	int AssignPin(int argId);
+	//int AssignPin(int argId);
 	void SetupById(int argId);
 	int GetGlobalZero();
 	int GetId();
@@ -103,22 +102,23 @@ class SvoV2 {
 	int _maxPwm;                       // maximum is this value times 4 added to SvoV2_MAX_PULSE_WIDTH  
 	bool _isForward;
 	int _myPin;
-	int _midAngle;
-	int _midUs;
-	int _curPos;
-	int _lastPos;
-	int _nextPos;
+	bool _useOffsetAngle;
+	//int _midAngle;
+	//int _midUs;
+	//int _curPos;
+	//int _lastPos;
+	//int _nextPos;
 
-	String _name;
+	//char _name[3];
 	int _GlobalZeroAngle;// will be hardcoded per id
-	int _GlobalMaxOutAngle;
-	int _GlobalMaxINAngle;
+	int _GlobalMax;
+	int _GlobalMin;
 	int _id;// 
 
-	int _GlobalZeroPWM; // will be hardcoded per id
+	//int _GlobalZeroPWM; // will be hardcoded per id
 
-	int _GlobalMaxOutPMW;
-	int _GlobalMaxINPMW;
+	//int _GlobalMaxOutPMW;
+	//int _GlobalMaxINPMW;
 
 	//int offsettedAngle(int argAngle);
 	//int OffsettedUs(int argUS);//not needed , delete me 
