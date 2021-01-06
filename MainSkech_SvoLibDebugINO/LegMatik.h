@@ -18,10 +18,12 @@ class LegMatik {
 #pragma region PUBS
 	public:
 	//LegMatik();
-	LegMatik(SvoV2*  argArra, uint8_t argShoulderIndex, uint8_t argArmIndex, uint8_t argCalfIndex);
-	void TestMyServos();
-	void PrintAngles(int argT, int argD, int argH);
-	void MoveToBySpeed(int argT, int argD, int argH, int argspeed);
+	LegMatik(SvoV2*  argArra, uint8_t argShoulderIndex, uint8_t argArmIndex, uint8_t argCalfIndex, char argCharId);
+	//void TestMyServos();
+	//void PrintAngles(int argT, int argD, int argH);
+	void MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool argmove);
+	
+	char _charId;
 #pragma endregion
 
 #pragma region priv
@@ -36,10 +38,9 @@ class LegMatik {
 
 	float getANgleSSS(float argArm, float argOpositEdge, float argthird);
 
-	String XYZ_inputConversion(int argT, int argD, int argH, bool argDoMove, int argspeed);
-
 	float sqrt88x(const float x);
 
+	void XYZ_inputConversion(int argT, int argD, int argH, bool argDoMove, int argspeed);
 #pragma endregion
 	};
 

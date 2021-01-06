@@ -113,6 +113,8 @@ class SvoV2 {
 	const int calfZero = 112;
 	const int calfMin = 110;
 	const int calfMax = 270;
+
+	int EmergencyUm;
 	};
 
 #endif

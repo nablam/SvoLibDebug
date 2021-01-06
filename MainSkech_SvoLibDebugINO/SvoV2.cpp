@@ -350,9 +350,9 @@ void SvoV2::Stop() {
     }
 void  SvoV2::ZeroMe() {
      
-    if (this->_id % 3 == 2) this->Speedmove(180, 0);
+    if (this->_id % 3 == 2) this->WriteMicroseconds(1500);
     else
-        this->Speedmove(0, 0);
+        this->WriteMicroseconds(2020);
     }
 
 void  SvoV2::SitMe() {
@@ -384,22 +384,22 @@ void SvoV2::SetupById(int argId) {
                 this->_myPin = 23;
                 this->_isForward = false; //positive Transvers this->should open the this->shoulder OUT away from body
                 this->_GlobalZeroAngle = this->shoulderZero;
-                this->_GlobalMax = 250;// can go to  250 only !!!
+                this->_GlobalMax = this->shoulderMax;// can go to  250 only !!!
                 this->_GlobalMin = this->shoulderMin;// can go down to 140; before  phd lol
                 break;
             case 6:
                 this->_myPin = 28;
                 this->_isForward = false; //positive Transvers this->should open the this->shoulder OUT away from body
                 this->_GlobalZeroAngle = this->shoulderZero;
-                this->_GlobalMax = 250;
+                this->_GlobalMax = this->shoulderMax;
                 this->_GlobalMin = this->shoulderMin;
                 break;
             case 9:
                 this->_myPin = 29;
                 this->_isForward = true; //positive Transvers this->should open the this->shoulder OUT away from body
                 this->_GlobalZeroAngle = this->shoulderZero;
-                this->_GlobalMax = 250;
-                this->_GlobalMin = 140;
+                this->_GlobalMax = this->shoulderMax;
+                this->_GlobalMin = this->shoulderMin;
                 break;
 //============================================================================
                     //the arms group , this->should have a 48 degree displacement from center to minimize phd while keeping symetry ..
@@ -472,32 +472,65 @@ void SvoV2::SetupById(int argId) {
     }
 int SvoV2::OffsettedAngle(int argAngle) {
     int ConvertedAngle = 0;
-
-    if (this->_id % 3 == 2) {
-        //180 input -> 110
-        //40 input ->270
-        //160 input = 180-160 =40 +110 =150
-        argAngle = constrain(argAngle, 40, 180);
-        if (_isForward)
-            {
-           
-            ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-            }
-        else {
-            ConvertedAngle = this->_GlobalMin-( 180 - argAngle );
-            }
-        
-        }
-    else
-    if ( _isForward  ) 
+ 
+  
+    switch (this->_id)
         {
-        ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+        //arms
+            case 1://f
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+            case 4://t
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+            case 7://t
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+            case 10://f
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+
+                //shoulders
+
+            case 0: //t
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+            case 3://f
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+            case 6://f
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+            case 9://t
+                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
+                break;
+
+                //claves
+                //180 input -> 110
+                //40 input ->270
+                //160 input = 180-160 =40 +110 =150
+            case 2://t
+                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+                break;
+            case 5://t
+                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+                break;
+            case 8://t
+                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+                break;
+            case 11://t
+                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+                break;
+
+               /* if (_isForward)
+                    {
+
+                    ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+                    }
+                else {
+                    ConvertedAngle = this->_GlobalMin - (180 - argAngle);
+                    }*/
         }
-    else
-       // if (this->_isForward == false)
-            {
-            ConvertedAngle = this->_GlobalZeroAngle - argAngle;
-            }
    ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
 #ifdef LOGDEBUG
    Serial.print("conv");  Serial.println(ConvertedAngle);

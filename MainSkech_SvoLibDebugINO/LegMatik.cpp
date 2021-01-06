@@ -3,45 +3,47 @@
 // 
 
 #include "LegMatik.h"
+ #define LOGDEBUG
 
 #pragma region PUBS
 //LegMatik::LegMatik() {}
-LegMatik::LegMatik(SvoV2* argArra, uint8_t argShoulderIndex, uint8_t argArmIndex, uint8_t argCalfIndex) {
-	  _myShoulder= &argArra[argShoulderIndex];
-	 _myArm= &argArra[argArmIndex];;
-	  _myCalf=& argArra[argCalfIndex];;
+LegMatik::LegMatik(SvoV2* argArra, uint8_t argShoulderIndex, uint8_t argArmIndex, uint8_t argCalfIndex,char argcharId) {
+	_myShoulder= &argArra[argShoulderIndex];
+	_myArm= &argArra[argArmIndex];;
+	_myCalf=& argArra[argCalfIndex];;
+	_charId = argcharId;
+	}
+//void LegMatik::TestMyServos() {
+//	uint8_t a, b, c = 0;
+//	if (_myShoulder) {
+//		_myShoulder->SitMe();
+//		_myShoulder->PrintMe();
+//		a = 1;
+//		}
+//	if (_myArm) {
+//		_myArm->SitMe();
+//		_myArm->PrintMe();
+//		b = 1;
+//		}
+//	if (_myCalf) {
+//		_myCalf->SitMe();
+//		_myCalf->PrintMe();
+//		c = 1;
+//		}
+//	if ((a + b + c) != 3) {
+//	#ifdef  LEGDEBUG
+//		Serial.println("nullptr?!");
+//	#endif //  LEGDEBUG
+//		}
+//	}
 
-	}
-void LegMatik::TestMyServos() {
-	uint8_t a, b, c = 0;
-	if (_myShoulder) {
-		_myShoulder->SitMe();
-		_myShoulder->PrintMe();
-		a = 1;
-		}
-	if (_myArm) {
-		_myArm->SitMe();
-		_myArm->PrintMe();
-		b = 1;
-		}
-	if (_myCalf) {
-		_myCalf->SitMe();
-		_myCalf->PrintMe();
-		c = 1;
-		}
-	if ((a + b + c) != 3) {
-	#ifdef  LEGDEBUG
-		Serial.println("nullptr?!");
-	#endif //  LEGDEBUG
-		}
+//void LegMatik::PrintAngles(int argT, int argD, int argH) {
+//	Serial.println(XYZ_inputConversion(argT, argD, argH, false, 0));
+//	}
+void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool argmove) {
+	XYZ_inputConversion(argT, argD, argH, argmove, argspeed);
 	}
 
-void LegMatik::PrintAngles(int argT, int argD, int argH) {
-	Serial.println(XYZ_inputConversion(argT, argD, argH, false, 0));
-	}
-void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed) {
-	XYZ_inputConversion(argT, argD, argH, true, argspeed);
-	}
 #pragma endregion
 #pragma region priv
 
@@ -150,11 +152,20 @@ void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed) {
 		return rads * (180 / PI);
 		}
 
+	float LegMatik::sqrt88x(const float x)
+		{
+		union {
+			int i;
+			float x;
+			} u;
 
+		u.x = x;
+		u.i = (1 << 29) + (u.i >> 1) - (1 << 22);
+		return u.x;
+		}
 
-
-	String LegMatik::XYZ_inputConversion(int argT, int argD, int argH,bool argDoMove, int argspeed) {
-		String Outputstr = "";
+	void LegMatik::XYZ_inputConversion(int argT, int argD, int argH, bool argDoMove, int argspeed) {
+		
 		float Zprime = GetZprime(argH, argT);
 		float S0Angle = GetRawAngle(argT, Zprime);
 
@@ -162,8 +173,22 @@ void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed) {
 		float S1AnglePlus = GetRawAngle(argD, Zprime);
 		float S1Angle = getANgleSSS(ARMLEN, CALFLEN, z);
 
-		S1Angle = abs(S1AnglePlus - S1Angle); //normalize for Arms
-		float S2Angle =  getANgleSSS(CALFLEN, z, ARMLEN);		//old norm for cal was 180 - getAn... );
+	#ifdef LOGDEBUG
+		String debstr = "";
+		int s1AngleInt_beta = (int)S1Angle;
+		int rounded1_beta = round(S1Angle);
+
+		int S1AnglePlus_beta = (int)S1AnglePlus;
+		int roundedS1AnglePlus_beta = round(S1AnglePlus);
+		debstr = "(" + String(roundedS1AnglePlus_beta) + " - " + String(rounded1_beta) + ")=";
+		//Serial.print("("); Serial.print(roundedS1AnglePlus_beta);  Serial.print("-"); Serial.print(rounded1_beta); Serial.print(","); Serial.print(" ");
+	#endif // LOGDEBUG
+
+
+		S1Angle = S1AnglePlus - S1Angle; //normalize for Arms
+		float S2Angle = getANgleSSS(CALFLEN, z, ARMLEN);		//old norm for cal was 180 - getAn... );
+
+
 
 		// INT CONVERSION HERE 
 
@@ -180,23 +205,19 @@ void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed) {
 			_myArm->Speedmove(rounded1, argspeed);
 			_myCalf->Speedmove(rounded2, argspeed);
 			}
-
-		String pl = ",";
-		Outputstr = rounded0 + pl + rounded1 + pl + rounded2;
-
-		return Outputstr;
+		else
+			{
+		#ifdef LOGDEBUG
+			String Outputstr = "";
+			String pl = ",";
+			Outputstr = pl + " "+ rounded0 + pl + debstr+ rounded1 + pl + rounded2 + (char)this->_charId;
+			Serial.print(""); Serial.println(Outputstr);
+		#endif // LOGDEBUG
+			}
+		
 		}
+#pragma endregion
+#pragma region privs
 
-	float LegMatik::sqrt88x(const float x)
-		{
-		union {
-			int i;
-			float x;
-			} u;
-
-		u.x = x;
-		u.i = (1 << 29) + (u.i >> 1) - (1 << 22);
-		return u.x;
-		}
 
 #pragma endregion
