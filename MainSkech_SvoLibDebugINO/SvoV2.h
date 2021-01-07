@@ -88,7 +88,7 @@ class SvoV2 {
 	 
 	int Read();
 	int ReadMicroseconds();
-
+	int ConvertValueToTimmedMS(int argValue);
 	uint8_t svoV2Index; // index into the channel data for this sevo
 	int _minPwm;		// minimum is this value times 4 added to SvoV2_MIN_PULSE_WIDTH    
 	int _maxPwm;		// maximum is this value times 4 added to SvoV2_MAX_PULSE_WIDTH  
@@ -117,6 +117,7 @@ class SvoV2 {
 	const int calfMax = 270;
 
 	int EmergencyUm;
+	int _timesSpeedmorerequested = 0;
 	};
 
 #endif

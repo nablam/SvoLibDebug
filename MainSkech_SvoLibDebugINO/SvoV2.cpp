@@ -8,7 +8,7 @@
 #include "SvoV2.h"
 
 */
-// #define LOGDEBUG
+ #define LOGDEBUG
 #if defined(ARDUINO_ARCH_AVR)
 #include <avr/interrupt.h>
 #include <Arduino.h>
@@ -341,9 +341,7 @@ void SvoV2::ProcessRawAnglesSpeedMove(uint8_t speed, int argA0, int argDzprime, 
                     }*/
         }
     ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
-#ifdef LOGDEBUG
-    Serial.print("conv");  Serial.println(ConvertedAngle);
-#endif // LOGDEBUG
+
      
     Speedmove(ConvertedAngle, speed);
     }
@@ -351,15 +349,22 @@ int cnt = 0;
 //speed=0 - Full speed, identical to write ,speed=1 - Minimum speed , speed=255 - Maximum speed
 void SvoV2::Speedmove(int value, uint8_t speed ) {
     cnt++;
+    _timesSpeedmorerequested++;
+   // int valueMs = ConvertValueToTimmedMS(value);
+#ifdef LOGDEBUG
+     
+  
     _lastRequestedValue= _CurRequestedValue;
-    _CurRequestedValue =value;
+    _CurRequestedValue = value;
+
+    if (this->_id == 1) {
+        Serial.print(_timesSpeedmorerequested); Serial.print(" id="); Serial.print(this->_id);
+        Serial.print(" last= "); Serial.print(_lastRequestedValue);  Serial.print(" "); Serial.print("new="); Serial.println(_CurRequestedValue);
+        }
+#endif // LOGDEBUG
     // This fuction is a copy of write and witeMicroseconds but value will be saved
     // in target instead of in ticks in the servo structure and speed will be save
     // there too.
-#ifdef LOGDEBUG
-    Serial.print("val=");   Serial.print(value); Serial.print("ofst="); Serial.println(value);
-#endif
-    if (this->_id == 1) { Serial.print(cnt);   Serial.print(" ");  Serial.print("val0=");   Serial.println(value); }
     if (speed) {
         if (value < SVOV2_MIN_PULSE_WIDTH) {
         // treat values less than 544 as angles in degrees (valid values in microseconds are handled as microseconds)
@@ -379,14 +384,15 @@ void SvoV2::Speedmove(int value, uint8_t speed ) {
             else if (value > MCRO_SVOV2_MAX())
                 value = MCRO_SVOV2_MAX();
 
-            value = value - TRIM_DURATION;
-            value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
-            if (this->_id == 1) { Serial.print("  " );   Serial.print(" "); Serial.print("val1=");   Serial.println(value); }
+           // value = value - TRIM_DURATION;
+            //value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
+          //  if (this->_id == 1) { Serial.print("  " );   Serial.print(" "); Serial.print("val1=");   Serial.println(value); }
           //  Serial.print("valt=");   Serial.print(value);
             // Set speed and direction
+           
             uint8_t oldSREG = SREG;
             cli();
-            StaticSvoV2sArra[channel].target = value;
+            StaticSvoV2sArra[channel].target = ConvertValueToTimmedMS(value);
             StaticSvoV2sArra[channel].speed = speed;
             SREG = oldSREG;
             }
@@ -419,10 +425,24 @@ void SvoV2::Stop() {
     this->Write(this->Read());
     }
 void  SvoV2::ZeroMe() {
-     
-    if (this->_id % 3 == 2) this->WriteMicroseconds(1500);
-    else
-        this->WriteMicroseconds(2020);
+#ifdef LOGDEBUG
+
+    if (this->_id == 1) {  Serial.print("ZEROED"); Serial.println("!"); }
+    
+#endif // LOGDEBUG
+
+
+        _lastRequestedValue  = ConvertValueToTimmedMS(this->_GlobalZeroAngle);
+        _CurRequestedValue= _lastRequestedValue;
+        this->Write(this->_GlobalZeroAngle);
+      
+ 
+#ifdef LOGDEBUG
+
+    if (this->_id == 1) {
+        Serial.print("ZZ="); Serial.print(this->_id); Serial.print(" last= "); Serial.print(_lastRequestedValue);  Serial.print(" "); Serial.print("reset"); Serial.println(""); 
+    }
+#endif // LOGDEBUG
     }
 
 void  SvoV2::SitMe() {
@@ -592,16 +612,21 @@ void SvoV2::Write(int value)
         if (value > 270) value = 270;
 
         value = map(value, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
-    #ifdef  LOGDEBUG
-        Serial.print("min ");    Serial.print(_minPwm);    Serial.print("  ");    Serial.print("max "); Serial.println(_maxPwm);
-        Serial.print("MIN ");    Serial.print(MCRO_SVOV2_MIN());    Serial.print("  ");    Serial.print("AMX "); Serial.println(MCRO_SVOV2_MAX());
-        Serial.print("wroteANGLE =");  Serial.println(value);
+    //#ifdef  LOGDEBUG
+    //    Serial.print("min ");    Serial.print(_minPwm);    Serial.print("  ");    Serial.print("max "); Serial.println(_maxPwm);
+    //    Serial.print("MIN ");    Serial.print(MCRO_SVOV2_MIN());    Serial.print("  ");    Serial.print("AMX "); Serial.println(MCRO_SVOV2_MAX());
+    //    Serial.print("wroteANGLE =");  Serial.println(value);
 
-    #endif // LOG
+    //#endif // LOG
 
 
         }
     this->WriteMicroseconds(value);
+    }
+
+int SvoV2::ConvertValueToTimmedMS(int argValue) {
+    int ConvertedAngleToMs= argValue - TRIM_DURATION;
+    return MCRO_usToTicks(ConvertedAngleToMs);
     }
 #pragma endregion
 #endif // ARDUINO_ARCH_AVR
