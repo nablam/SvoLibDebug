@@ -43,49 +43,6 @@ void moveandpause() {
 
 
 
-void loopTask() {
-  // put your main code here, to run repeatedly:
-	unsigned long currentTime = millis();
-
-	// task 1
-	if (currentTime - previousTimeStamp > timeIntervalLed1) {
-		previousTimeStamp = currentTime;
-// Do once foo
-		FL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
-		}
-
-		// task 2
-	if (Serial.available()) {
-		int userInput = Serial.parseInt();
-		if (userInput >= 0 && userInput < 256) {
-			savedval = userInput;
-			}
-		}
-
-		// task 3
-	//if (digitalRead(BUTTON_PIN) == HIGH) {
-	//	digitalWrite(LED_3_PIN, HIGH);
-	//	}
-	//else {
-	//	digitalWrite(LED_3_PIN, LOW);
-	//	}
-
-		// task 4
-	/*int potentiometerValue = analogRead(POTENTIOMETER_PIN);
-	if (potentiometerValue > 512) {
-		digitalWrite(LED_4_PIN, HIGH);
-		}
-	else {
-		digitalWrite(LED_4_PIN, LOW);
-		}*/
-
-		// task 5
-	if (currentTime - previousTimeSerialPrintPotentiometer > timeIntervalSerialPrint) {
-		previousTimeSerialPrintPotentiometer = currentTime;
-		Serial.println(savedval);
-//do once
-		}
-	}
 
 
 //void ONDoOnceEvery(int argInterval, unsigned long&argPrevStamp, unsigned long argCurtime, void(*FooFunc) ) {
@@ -98,3 +55,42 @@ void ONDoOnceEvery(int argInterval, unsigned long& argPrevStamp, unsigned long a
 		argVoidfunc();
 		}
 	}
+
+
+int manualD;
+int manualDinv;
+int manualT;
+int manualTinv;
+int manualH;
+int manualHInv;
+
+void CalculateForSlide() {
+	  manualD= map(_masterjds.LS_dU, 0, PotReadScale, -11, 11);
+	  manualDinv = map(_masterjds.LS_dU, 0, PotReadScale, 11, -11);
+	  manualT= map(_masterjds.LS_lR, 0, PotReadScale, -11, 11);
+	  manualTinv = map(_masterjds.LS_lR, 0, PotReadScale, 11, -11);
+	  manualH = map(_masterjds.RS_uD, 0, PotReadScale, 13, 23);
+	    
+	    manualHInv = map(_masterjds.RS_uD, 0, PotReadScale, 23, 13 );
+
+		//String outstr =
+		//	"D" + String(manualD) + " D^ " + String(manualDinv) + "\n" +
+		//	"T" + String(manualT) + " T^ " + String(manualTinv) + "\n" +
+		//	"H " + String(manualH) + " H^ " + String(manualHInv) + "\n";
+		//Serial.print(outstr);
+	}
+void CalculateforPivrot() {}
+void SlideLAt() {
+	CalculateForSlide();
+	FL.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
+	FR.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
+	BL.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
+	BR.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
+	}
+
+void SlideFor() {
+	
+	}
+
+void Tilt() {}
+void Pivot() {}

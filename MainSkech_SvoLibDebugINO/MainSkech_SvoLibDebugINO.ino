@@ -45,13 +45,11 @@ int positionsTest[totalPositions][4] = {
 //-----------------------------------------------------------------------------counters
 unsigned long startMicros;// = micros();
 unsigned long currentTime = millis();
+unsigned long currentTime_0_10 =-1;
 unsigned long endMicros;  
 unsigned long _0_10_msCounterStampCashed=0;
 //
-unsigned long previousTimeStamp = millis();
-long timeIntervalLed1 = 1000;
-unsigned long previousTimeSerialPrintPotentiometer = millis();
-long timeIntervalSerialPrint = 2000;
+ 
 //------------------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------functionpointers
@@ -64,7 +62,6 @@ void (*F_ReadPots)();
 //---------------------------------------------------------------------------------------------
 
 int savedval = 0;
-
 
 #pragma endregion
 
@@ -107,8 +104,6 @@ void setup() {
 5 *********************
 5 id=1 last= 162 new=158
 */
-
-
 void loop() {
 	  currentTime = millis();
 	//  ONDoOnceEvery(1000, _0_10_msCounterStampCashed, currentTime, afooptr);
@@ -128,10 +123,87 @@ void loop() {
 	//	moveandpause();
 	//	}
 	////Serial.println(pval10_LS_lR);
-	//loopTask();
+	 loopTask();
 }
+void loopTask() {
+  // put your main code here, to run repeatedly:
+	//unsigned long currentTime = millis();
 
+	// cOUNT 10 mILLIS
+	if (currentTime - _0_10_msCounterStampCashed >= 1) {
+		_0_10_msCounterStampCashed = currentTime;
+  
+		switch (_0_10_msCounterStampCashed%10)
+			{
+			//--------------------------READ
+				case 0:
+					ReadPotpins();
+					break;
+				case 1:
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
 
+					//--------------------------calc
+				case 4:
+					break;
+				case 5:
+					break;
+				case 6:
+					break;
+				case 7:
+					break;
+					//--------------------------write
+				case 8:
+					SlideLAt();
+					break;
+				case 9:
+					break;
+					
+
+				default:
+					break;
+			}
+
+		if (_0_10_msCounterStampCashed % 100 == 0) {
+			
+			}
+		}
+
+		// task 2
+	//if (Serial.available()) {
+	//	int userInput = Serial.parseInt();
+	//	if (userInput >= 0 && userInput < 256) {
+	//		savedval = userInput;
+	//		}
+	//	}
+
+		// task 3
+	//if (digitalRead(BUTTON_PIN) == HIGH) {
+	//	digitalWrite(LED_3_PIN, HIGH);
+	//	}
+	//else {
+	//	digitalWrite(LED_3_PIN, LOW);
+	//	}
+
+		// task 4
+	/*int potentiometerValue = analogRead(POTENTIOMETER_PIN);
+	if (potentiometerValue > 512) {
+		digitalWrite(LED_4_PIN, HIGH);
+		}
+	else {
+		digitalWrite(LED_4_PIN, LOW);
+		}*/
+
+		// task 5
+	//if (currentTime - previousTimeSerialPrintPotentiometer > timeIntervalSerialPrint) {
+	//	previousTimeSerialPrintPotentiometer = currentTime;
+	//	Serial.println(savedval);
+//do once
+		//}
+	}
 
 
 

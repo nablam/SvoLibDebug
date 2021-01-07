@@ -8,7 +8,7 @@
 #include "SvoV2.h"
 
 */
- #define LOGDEBUG
+// #define LOGDEBUG
 #if defined(ARDUINO_ARCH_AVR)
 #include <avr/interrupt.h>
 #include <Arduino.h>

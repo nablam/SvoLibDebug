@@ -41,17 +41,22 @@ void ReadPotpins() {
 	pval11_RS_uD = analogRead(potpin11);//   512 +-6 amplitude 172
 	pval12_RS_lR = analogRead(potpin12); //
 	pval13_RS_rot = analogRead(potpin13);//rot  7-->  14-15-16  --->27
+
+
+	Map01K_update_masterJS();
 	}
 void Map01K_update_masterJS() {
-
+	//printRawPotValues();
 // left JS<----------------------
-	pval8_LS_rot = deadzonefilter(map(analogRead(potpin8), 0, 15, 0, PotReadScale), true);
+	pval8_LS_rot = constrain(pval8_LS_rot, 5, 25);
+	pval8_LS_rot = deadzonefilter(map(analogRead(potpin8), 5, 25, 0, PotReadScale), true);
 	pval9_LS_dU = deadzonefilter(map(analogRead(potpin9), 338, 678, 0, PotReadScale), false);
 	pval10_LS_lR = deadzonefilter(map(analogRead(potpin10), 336, 676, 0, PotReadScale), false);
    //rightJS-------------------------------->
-	pval11_RS_uD = deadzonefilter(map(analogRead(potpin11), 330, 688, 0, PotReadScale), false);
+	pval11_RS_uD = deadzonefilter(map(analogRead(potpin11), 330, 688,  PotReadScale,0), false);
 	pval12_RS_lR = deadzonefilter(map(analogRead(potpin12), 330, 680, 0, PotReadScale), false);
-	pval13_RS_rot = deadzonefilter(map(analogRead(potpin13), 2, 50, 0, PotReadScale), true);
+	pval13_RS_rot = constrain(pval13_RS_rot, 0, 25);
+	pval13_RS_rot =   deadzonefilter(map(analogRead(potpin13), -1, 25, 0, PotReadScale), true);
 //	Serial.println(pval11_RS_uD);
 
 	_masterjds.LS_rot = pval8_LS_rot;
@@ -62,6 +67,8 @@ void Map01K_update_masterJS() {
 	_masterjds.RS_lR = pval12_RS_lR;
 	_masterjds.RS_rot = pval13_RS_rot;
 
+	//printRawPotValues();
+
 	}
 
 //{pval8_LS_rot} {pval9_LS_dU} {pval10_LS_lR} {pval11_RS_uD} {pval12_RS_lR} {pval13_RS_rot}
@@ -69,7 +76,7 @@ void Map01K_update_masterJS() {
 int deadzonefilter(int argval, bool argisRot) {
 
 	if (argisRot) {
-		if ((argval > ((PotReadScale / 2) - (DeadZoneHalfAmplitude / 4))) && (argval < ((PotReadScale / 2) + (DeadZoneHalfAmplitude / 4))))
+		if ((argval > ((PotReadScale / 2) - (DeadZoneHalfAmplitude +20))) && (argval < ((PotReadScale / 2) + (DeadZoneHalfAmplitude +20))))
 			argval = (PotReadScale / 2);
 
 		if (argval < 0)argval = 0;
@@ -89,5 +96,12 @@ int deadzonefilter(int argval, bool argisRot) {
 	return argval;
 	}
 
-
+void printRawPotValues() {
+	String outstr = 
+		"LS lr" + String( pval10_LS_lR)+ " ud "+ String(pval9_LS_dU) + "\n" +
+		"RS lr" + String(pval12_RS_lR) + " ud " + String(pval11_RS_uD)+"\n" + 
+		"L rot " + String(pval8_LS_rot) + " R rot " + String(pval13_RS_rot) + "\n";
+	Serial.print(outstr);
+	
+	}
 
