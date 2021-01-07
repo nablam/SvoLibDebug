@@ -9,8 +9,16 @@
 const int SpeedGlobal = 36;
 const int DelayGlobal = 4000;
 const int SpeedGlobalSlow = SpeedGlobal/2;
-const int totalPositions = 5;
-bool togg = false;
+const int totalPositions = 6;
+bool togg = true;
+const int LoopLen = 12; //ms
+typedef void (*GenericFP_VI)(int); //function pointer prototype to a function which takes an 'int' an returns 'void'
+typedef void (*GenericFP_V)();  
+void afoo() { Serial.println("yooo"); }
+GenericFP_V afooptr; 
+
+  void (*F_kine)();
+void (*F_ReadPots)();
 SvoV2 s0,s1,s2,s3,s4,s5,s6,s7, s8, s9, s10, s11;
 SvoV2 SVOarra[12] = { s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11 };
 SvoV2* sarraptr = SVOarra;
@@ -20,36 +28,106 @@ LegMatik BL(sarraptr, 6, 7, 8,'c');
 LegMatik BR(sarraptr, 9, 10, 11,'d');
 
 int positions[totalPositions][4] = {
-	{3,0,13,SpeedGlobal },
+	{0,0,12,SpeedGlobal },
 	{0,8,19,SpeedGlobalSlow},
 	{0,4,19,SpeedGlobalSlow},
 	{0,-4,19,SpeedGlobalSlow},
+	{0,-4,19,SpeedGlobalSlow},
 	{0,-8,19,SpeedGlobalSlow}
 	};
-/*,a 13,56,68
-,a 0,8,118
-,a 0,24,108
-,a 0,48,108
-,a 0,54,118
-,a 13,56,68*/
+ 
 int positionsTest[totalPositions][4] = {
 	{0,0,24,SpeedGlobal },
-	{0,0,20,SpeedGlobalSlow},
-	{0,4,20,SpeedGlobalSlow},
-	{0,8,20,SpeedGlobalSlow},
-	{0,12,20,SpeedGlobalSlow}
+	{0,0,12,SpeedGlobalSlow},
+	{0,11,21,SpeedGlobalSlow},
+	{0,9,21,SpeedGlobalSlow},
+	{0,0,21,SpeedGlobalSlow},
+	{0,-8,21,SpeedGlobalSlow}
 	};
 
-/*,a 0,0,180
-,a 0,34,113
-,a 0,20,116
-,a 0,4,128
-,a 0,17,153*/
+/*\\\
+ 0,(0 + 0)=0,180a
+, 0,(0 + 60)=60,60a
+, 0,(28 + 9)=37,162a
+, 0,(23 + 18)=41,144a
+, 0,(0 + 29)=29,122a
+, 0,(-21 + 21)=0,139a
+*/
 int i_a = 0;
 int i_b = 1;
 int i_c = 2;
 int i_d = 3;
-void IncremantIndex(int & argindex, int& brgindex, int& crgindex, int& drgindex) {
+unsigned long startMicros;// = micros();
+unsigned long currentTime = millis();
+unsigned long endMicros;  
+unsigned long _0_10_msCounterStampCashed=0;
+void setup() {
+	Serial.begin(115200);
+	for (int x = 0; x < 12; x++) {
+		 if(!SVOarra[x].Attached())
+		SVOarra[x].AttachSelf();
+		SVOarra[x].ZeroMe();
+		}
+	/*startMicros = micros();
+	for (int n = 0; n < 1; n++) {
+		moveandpause();
+		}
+	endMicros = micros();
+
+	Serial.println(endMicros - startMicros);*/
+	afooptr= afoo;
+}
+
+//void ONDoOnceEvery(int argInterval, unsigned long&argPrevStamp, unsigned long argCurtime, void(*FooFunc) ) {
+	void ONDoOnceEvery(int argInterval, unsigned long& argPrevStamp, unsigned long argCurtime, GenericFP_V &argVoidfunc) {
+	
+	if (argCurtime - argPrevStamp > argInterval) {
+		argPrevStamp = argCurtime;
+//do once
+
+		//Serial.println("wtf");
+		
+		argVoidfunc();
+			 
+			
+		}
+	
+	}
+
+
+void loop() {
+	  currentTime = millis();
+	  ONDoOnceEvery(1000, _0_10_msCounterStampCashed, currentTime, afooptr);
+	  /*if (currentTime - previousTimeSerialPrintPotentiometer > timeIntervalSerialPrint) {
+		  previousTimeSerialPrintPotentiometer = currentTime;
+		  Serial.println(savedval);*/
+  //do once
+		 // }
+
+
+	//ReadPotpins();
+	//for (int x = 0; x < 20; x++) {
+	//	 
+	//	  
+	//	 
+	//	 
+	//	moveandpause();
+	//	}
+	////Serial.println(pval10_LS_lR);
+	//loopTask();
+}
+
+void loopCaseSwitch() {}
+
+void moveandpause( ) {
+	//delay(DelayGlobal);
+	FL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
+	FR.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
+	BL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
+	BR.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
+	IncremantIndex(i_a, i_b, i_c, i_d);
+	}
+void IncremantIndex(int& argindex, int& brgindex, int& crgindex, int& drgindex) {
 	argindex++;
 	if (argindex >= totalPositions)argindex = 0;
 	brgindex++;
@@ -60,72 +138,56 @@ void IncremantIndex(int & argindex, int& brgindex, int& crgindex, int& drgindex)
 	if (drgindex >= totalPositions)drgindex = 0;
 
 	}
-void setup() {
-	Serial.begin(115200);
-	for (int x = 0; x < 12; x++) {
-		 if(!SVOarra[x].Attached())
-		SVOarra[x].AttachSelf();
-		SVOarra[x].ZeroMe();
-		}
-}
 
-void loop() {
-
-	for (int x = 0; x < 20; x++) {
-		// 
-		 // 
-		// 
-		// 
-		moveandpause();
-		}
  
+unsigned long previousTimeStamp = millis();
+long timeIntervalLed1 = 1000;
+unsigned long previousTimeSerialPrintPotentiometer = millis();
+long timeIntervalSerialPrint = 2000;
+int savedval = 0;
+void loopTask() {
+  // put your main code here, to run repeatedly:
+	unsigned long currentTime = millis();
 
-}
+	// task 1
+	if (currentTime - previousTimeStamp > timeIntervalLed1) {
+		previousTimeStamp = currentTime;
+// Do once foo
+		FL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
+		}
 
-void moveandpause( ) {
-	delay(DelayGlobal);
-	FL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
-	//FR.MoveToBySpeed(positions[i_b][0], positions[i_b][1], positions[i_b][2], positions[i_b][3], togg);
-	//BL.MoveToBySpeed(positions[i_c][0], positions[i_c][1], positions[i_c][2], positions[i_c][3], togg);
-	//BR.MoveToBySpeed(positions[i_d][0], positions[i_d][1], positions[i_d][2], positions[i_d][3], togg);
+		// task 2
+	if (Serial.available()) {
+		int userInput = Serial.parseInt();
+		if (userInput >= 0 && userInput < 256) {
+			savedval = userInput;
+			}
+		}
 
-	//FL.MoveToBySpeed(t, d, h , SpeedGlobal, togg);
-	//FR.MoveToBySpeed(t, d, h , SpeedGlobal, togg);
-	//BL.MoveToBySpeed(t, d, h , SpeedGlobal, togg);
-	//BR.MoveToBySpeed(t, d, h , SpeedGlobal, togg);
-	
-	IncremantIndex(i_a, i_b, i_c, i_d);
-	}
+		// task 3
+	//if (digitalRead(BUTTON_PIN) == HIGH) {
+	//	digitalWrite(LED_3_PIN, HIGH);
+	//	}
+	//else {
+	//	digitalWrite(LED_3_PIN, LOW);
+	//	}
 
-void GoToLow() {
-	FL.MoveToBySpeed(0, 0, 13, SpeedGlobal,togg);
-	FR.MoveToBySpeed(0, 0, 13, SpeedGlobal,togg);
-	BL.MoveToBySpeed(0, 0, 13, SpeedGlobal,togg);
-	BR.MoveToBySpeed(0, 0, 13, SpeedGlobal,togg);
-	delay(DelayGlobal);
-	}
-void GoToHigh() {
-	FL.MoveToBySpeed(0, 0, 23, SpeedGlobal,togg);
-	FR.MoveToBySpeed(0, 0, 23, SpeedGlobal,togg);
-	BL.MoveToBySpeed(0, 0, 23, SpeedGlobal,togg);
-	BR.MoveToBySpeed(0, 0, 23, SpeedGlobal,togg);
-	delay(DelayGlobal);
-	}
-void GoToForward() {
-	FL.MoveToBySpeed(0, -10, 15, SpeedGlobal,togg);
-	FR.MoveToBySpeed(0, -10, 15, SpeedGlobal,togg);
-	BL.MoveToBySpeed(0, 10, 15, SpeedGlobal,togg);
-	BR.MoveToBySpeed(0, 10, 15, SpeedGlobal,togg);
-	delay(DelayGlobal);
-	}
-void GoToBack() {
-	FL.MoveToBySpeed(0, 8, 15, SpeedGlobal,togg);
-	FR.MoveToBySpeed(0, 8, 15, SpeedGlobal,togg);
-	BL.MoveToBySpeed(0, -8, 15, SpeedGlobal,togg);
-	BR.MoveToBySpeed(0, -8, 15, SpeedGlobal,togg);
-	delay(DelayGlobal);
-	}
+		// task 4
+	/*int potentiometerValue = analogRead(POTENTIOMETER_PIN);
+	if (potentiometerValue > 512) {
+		digitalWrite(LED_4_PIN, HIGH);
+		}
+	else {
+		digitalWrite(LED_4_PIN, LOW);
+		}*/
 
+		// task 5
+	if (currentTime - previousTimeSerialPrintPotentiometer > timeIntervalSerialPrint) {
+		previousTimeSerialPrintPotentiometer = currentTime;
+		Serial.println(savedval);
+//do once
+		}
+	}
 
 
 

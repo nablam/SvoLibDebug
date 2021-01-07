@@ -3,7 +3,7 @@
 // 
 
 #include "LegMatik.h"
- #define LOGDEBUG
+ //#define LOGDEBUG
 
 #pragma region PUBS
 //LegMatik::LegMatik() {}
@@ -170,47 +170,32 @@ void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool ar
 		float S0Angle = GetRawAngle(argT, Zprime);
 
 		float z = GetZprime(argD, Zprime);
-		float S1AnglePlus = GetRawAngle(argD, Zprime);
+		float D_ZprimeAngle = GetRawAngle(argD, Zprime);
 		float S1Angle = getANgleSSS(ARMLEN, CALFLEN, z);
-
-	#ifdef LOGDEBUG
-		String debstr = "";
-		int s1AngleInt_beta = (int)S1Angle;
-		int rounded1_beta = round(S1Angle);
-
-		int S1AnglePlus_beta = (int)S1AnglePlus;
-		int roundedS1AnglePlus_beta = round(S1AnglePlus);
-		debstr = "(" + String(roundedS1AnglePlus_beta) + " - " + String(rounded1_beta) + ")=";
-		//Serial.print("("); Serial.print(roundedS1AnglePlus_beta);  Serial.print("-"); Serial.print(rounded1_beta); Serial.print(","); Serial.print(" ");
-	#endif // LOGDEBUG
-
-
-		S1Angle = S1AnglePlus - S1Angle; //normalize for Arms
-		float S2Angle = getANgleSSS(CALFLEN, z, ARMLEN);		//old norm for cal was 180 - getAn... );
-
-
-
+		float S2Angle = getANgleSSS(CALFLEN, z, ARMLEN);	
 		// INT CONVERSION HERE 
 
 		int s0AngleInt = (int)S0Angle;
+		int sDZprime = (int)D_ZprimeAngle;
 		int s1AngleInt = (int)S1Angle;
 		int s2AngleInt = (int)S2Angle;
 
 		int rounded0 = round(S0Angle);
+		int roundedDzprime = round(D_ZprimeAngle);
 		int rounded1 = round(S1Angle);
 		int rounded2 = round(S2Angle);
 
 		if (argDoMove) {
-			_myShoulder->Speedmove(rounded0, argspeed);
-			_myArm->Speedmove(rounded1, argspeed);
-			_myCalf->Speedmove(rounded2, argspeed);
+			_myShoulder->ProcessRawAnglesSpeedMove( argspeed, rounded0, roundedDzprime, rounded1, rounded2);
+			_myArm->ProcessRawAnglesSpeedMove(argspeed, rounded0, roundedDzprime, rounded1, rounded2);
+			_myCalf->ProcessRawAnglesSpeedMove(argspeed, rounded0, roundedDzprime, rounded1, rounded2);
 			}
 		else
 			{
 		#ifdef LOGDEBUG
 			String Outputstr = "";
 			String pl = ",";
-			Outputstr = pl + " "+ rounded0 + pl + debstr+ rounded1 + pl + rounded2 + (char)this->_charId;
+			Outputstr = " Legid=" + (char)this->_charId + pl + " "+ rounded0 + pl + roundedDzprime+ pl+ rounded1 + pl + rounded2 ;
 			Serial.print(""); Serial.println(Outputstr);
 		#endif // LOGDEBUG
 			}

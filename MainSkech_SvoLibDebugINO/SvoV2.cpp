@@ -281,48 +281,118 @@ void SvoV2::PrintMe() {
     Serial.println("");
 
     }
+void SvoV2::ProcessRawAnglesSpeedMove(uint8_t speed, int argA0, int argDzprime, int argA1 , int argA2) {
+    int ConvertedAngle = 0;
+    switch (this->_id)
+        {
+        //arms
+            case 1://f
+                ConvertedAngle = this->_GlobalZeroAngle + argDzprime- argA1;
+                break;
+            case 4://t
+                ConvertedAngle = this->_GlobalZeroAngle - argDzprime + argA1;
+                break;
+            case 7://t
+                ConvertedAngle = this->_GlobalZeroAngle + argDzprime + argA1;
+                break;
+            case 10://f
+                ConvertedAngle = this->_GlobalZeroAngle - argDzprime- argA1;
+                break;
+
+                //shoulders
+
+            case 0: //t
+                ConvertedAngle = this->_GlobalZeroAngle + argA0;
+                break;
+            case 3://f
+                ConvertedAngle = this->_GlobalZeroAngle + argA0;
+                break;
+            case 6://f
+                ConvertedAngle = this->_GlobalZeroAngle - argA0;
+                break;
+            case 9://t
+                ConvertedAngle = this->_GlobalZeroAngle - argA0;
+                break;
+
+                //claves
+                //180 input -> 110
+                //40 input ->270
+                //160 input = 180-160 =40 +110 =150
+            case 2://t
+                ConvertedAngle = 180 - argA2 + this->_GlobalMin;
+                break;
+            case 5://t
+                ConvertedAngle = 180 - argA2 + this->_GlobalMin;
+                break;
+            case 8://t
+                ConvertedAngle = 180 - argA2 + this->_GlobalMin;
+                break;
+            case 11://t
+                ConvertedAngle = 180 - argA2 + this->_GlobalMin;
+                break;
+
+               /* if (_isForward)
+                    {
+
+                    ConvertedAngle = 180 - argAngle + this->_GlobalMin;
+                    }
+                else {
+                    ConvertedAngle = this->_GlobalMin - (180 - argAngle);
+                    }*/
+        }
+    ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
+#ifdef LOGDEBUG
+    Serial.print("conv");  Serial.println(ConvertedAngle);
+#endif // LOGDEBUG
+     
+    Speedmove(ConvertedAngle, speed);
+    }
+int cnt = 0;
 //speed=0 - Full speed, identical to write ,speed=1 - Minimum speed , speed=255 - Maximum speed
-void SvoV2::Speedmove(int value, uint8_t speed) {
+void SvoV2::Speedmove(int value, uint8_t speed ) {
+    cnt++;
+    _lastRequestedValue= _CurRequestedValue;
+    _CurRequestedValue =value;
     // This fuction is a copy of write and witeMicroseconds but value will be saved
     // in target instead of in ticks in the servo structure and speed will be save
     // there too.
-
-    int valueOffsetted = OffsettedAngle(value);
 #ifdef LOGDEBUG
-    Serial.print("val=");   Serial.print(value); Serial.print("ofst="); Serial.println(valueOffsetted);
+    Serial.print("val=");   Serial.print(value); Serial.print("ofst="); Serial.println(value);
 #endif
+    if (this->_id == 1) { Serial.print(cnt);   Serial.print(" ");  Serial.print("val0=");   Serial.println(value); }
     if (speed) {
-        if (valueOffsetted < SVOV2_MIN_PULSE_WIDTH) {
-        // treat valueOffsetteds less than 544 as angles in degrees (valid valueOffsetteds in microseconds are handled as microseconds)
+        if (value < SVOV2_MIN_PULSE_WIDTH) {
+        // treat values less than 544 as angles in degrees (valid values in microseconds are handled as microseconds)
            
-           /* if (valueOffsetted < 0) valueOffsetted = 0;
-            if (valueOffsetted > 270) valueOffsetted = 270;*/
-            valueOffsetted = constrain(valueOffsetted, this->_GlobalMin, this->_GlobalMax);
-            valueOffsetted = map(valueOffsetted, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
+           /* if (value < 0) value = 0;
+            if (value > 270) value = 270;*/
+            value = constrain(value, this->_GlobalMin, this->_GlobalMax);
+            value = map(value, 0, 270, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX());
            
            
             }
-            // calculate and store the valueOffsetteds for the given channel
+            // calculate and store the values for the given channel
         byte channel = this->svoV2Index;
         if ((channel >= 0) && (channel < SVOV2_MAX_SERVOS)) {   // ensure channel is valid
-            if (valueOffsetted < MCRO_SVOV2_MIN())          // ensure pulse width is valid
-                valueOffsetted = MCRO_SVOV2_MIN();
-            else if (valueOffsetted > MCRO_SVOV2_MAX())
-                valueOffsetted = MCRO_SVOV2_MAX();
+            if (value < MCRO_SVOV2_MIN())          // ensure pulse width is valid
+                value = MCRO_SVOV2_MIN();
+            else if (value > MCRO_SVOV2_MAX())
+                value = MCRO_SVOV2_MAX();
 
-            valueOffsetted = valueOffsetted - TRIM_DURATION;
-            valueOffsetted = MCRO_usToTicks(valueOffsetted);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
-
+            value = value - TRIM_DURATION;
+            value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
+            if (this->_id == 1) { Serial.print("  " );   Serial.print(" "); Serial.print("val1=");   Serial.println(value); }
+          //  Serial.print("valt=");   Serial.print(value);
             // Set speed and direction
             uint8_t oldSREG = SREG;
             cli();
-            StaticSvoV2sArra[channel].target = valueOffsetted;
+            StaticSvoV2sArra[channel].target = value;
             StaticSvoV2sArra[channel].speed = speed;
             SREG = oldSREG;
             }
         }
     else {
-        Write(valueOffsetted);
+        Write(value);
         }
     }
 bool SvoV2::Attached()
@@ -470,73 +540,7 @@ void SvoV2::SetupById(int argId) {
 
     this->_id = argId;
     }
-int SvoV2::OffsettedAngle(int argAngle) {
-    int ConvertedAngle = 0;
  
-  
-    switch (this->_id)
-        {
-        //arms
-            case 1://f
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-            case 4://t
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-            case 7://t
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-            case 10://f
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-
-                //shoulders
-
-            case 0: //t
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-            case 3://f
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-            case 6://f
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-            case 9://t
-                ConvertedAngle = this->_GlobalZeroAngle + argAngle;
-                break;
-
-                //claves
-                //180 input -> 110
-                //40 input ->270
-                //160 input = 180-160 =40 +110 =150
-            case 2://t
-                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-                break;
-            case 5://t
-                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-                break;
-            case 8://t
-                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-                break;
-            case 11://t
-                ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-                break;
-
-               /* if (_isForward)
-                    {
-
-                    ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-                    }
-                else {
-                    ConvertedAngle = this->_GlobalMin - (180 - argAngle);
-                    }*/
-        }
-   ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
-#ifdef LOGDEBUG
-   Serial.print("conv");  Serial.println(ConvertedAngle);
-#endif // LOGDEBUG
-    return ConvertedAngle;
-    }
 int SvoV2::Read() // return the value as degrees
     {
     return  map(this->ReadMicroseconds() + 1, MCRO_SVOV2_MIN(), MCRO_SVOV2_MAX(), 0, 270);

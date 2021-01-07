@@ -72,6 +72,7 @@ class SvoV2 {
 	SvoV2( );
 	uint8_t AttachSelf();
 	void Detach();
+	void ProcessRawAnglesSpeedMove(uint8_t speed, int argA0, int argDzprime, int argA1, int argA2t);
 	void Speedmove(int value, uint8_t speed);
 	bool Attached();
 	bool IsMoving();
@@ -84,7 +85,7 @@ class SvoV2 {
 	void SetupById(int argId);
 	void Write(int value);
 	void WriteMicroseconds(int value);
-	int OffsettedAngle(int argAngle);
+	 
 	int Read();
 	int ReadMicroseconds();
 
@@ -93,8 +94,9 @@ class SvoV2 {
 	int _maxPwm;		// maximum is this value times 4 added to SvoV2_MAX_PULSE_WIDTH  
 	bool _isForward;
 	uint8_t _myPin;
-	int _currPwm;
-	int _nextPwm;
+	int _lastRequestedValue;
+	int _CurRequestedValue;
+	int _curvalue;
 	int _Adjustedspeed; //leg will adjust this to maintain even servo mtion. most likely a sealing to not exced
 	// leg is given xyz . 
 	//it calculates a0 a1 a2
