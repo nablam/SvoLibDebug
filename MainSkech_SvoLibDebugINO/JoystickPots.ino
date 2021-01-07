@@ -67,7 +67,7 @@ void Map01K_update_masterJS() {
 	_masterjds.RS_lR = pval12_RS_lR;
 	_masterjds.RS_rot = pval13_RS_rot;
 
-	//printRawPotValues();
+	printRawPotValues();
 
 	}
 

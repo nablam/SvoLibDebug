@@ -157,7 +157,7 @@ void loopTask() {
 					break;
 					//--------------------------write
 				case 8:
-					SlideLAt();
+					DecideTiltPivot();
 					break;
 				case 9:
 					break;

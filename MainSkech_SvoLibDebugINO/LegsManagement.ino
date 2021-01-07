@@ -79,8 +79,13 @@ void CalculateForSlide() {
 		//	"H " + String(manualH) + " H^ " + String(manualHInv) + "\n";
 		//Serial.print(outstr);
 	}
-void CalculateforPivrot() {}
-void SlideLAt() {
+void DecideTiltPivot() {
+	
+	if (_masterjds.RS_rot > 700) { SlideFlat(); }
+	else { PivotMid(); }
+
+	}
+void SlideFlat() {
 	CalculateForSlide();
 	FL.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
 	FR.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
@@ -92,5 +97,11 @@ void SlideFor() {
 	
 	}
 
-void Tilt() {}
-void Pivot() {}
+ 
+void PivotMid() {
+	CalculateForSlide();
+	FL.MoveToBySpeed(manualT, manualD, manualHInv, SpeedGlobal, togg);
+	FR.MoveToBySpeed(manualT, manualD, manualHInv, SpeedGlobal, togg);
+	BL.MoveToBySpeed(manualTinv, manualD, manualH, SpeedGlobal, togg);
+	BR.MoveToBySpeed(manualTinv, manualD, manualH, SpeedGlobal, togg);
+	}
