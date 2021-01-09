@@ -11,7 +11,7 @@ const int SpeedGlobal = 10;
 const int DelayGlobal = 4000;
 const int SpeedGlobalSlow = SpeedGlobal/2;
 
-bool togg = true;
+bool togg = false;
 const int LoopLen = 12; //ms
 
 
@@ -32,10 +32,16 @@ int positions[totalPositions][4] = {
 	};
 
 int positionsTest[totalPositions][4] = {
-	{0,11,21,SpeedGlobal },
-	{0,5,21,SpeedGlobalSlow},
+	//	{0,11,21,SpeedGlobal },
+	//{0,5,21,SpeedGlobalSlow},
+	//{0,0,21,SpeedGlobalSlow},
+	//{0,-4,21,SpeedGlobalSlow},
+	//{0,-8,21,SpeedGlobalSlow},
+	////{0,-8,21,SpeedGlobalSlow}
+	{0,1,14,SpeedGlobal },
+	{0,1,14,SpeedGlobalSlow},
 	{0,0,21,SpeedGlobalSlow},
-	{0,-4,21,SpeedGlobalSlow},
+	{0,11,21,SpeedGlobalSlow},
 	{0,-8,21,SpeedGlobalSlow},
 	//{0,-8,21,SpeedGlobalSlow}
 	};
@@ -89,7 +95,7 @@ void setup() {
 	endMicros = micros();
 
 	Serial.println(endMicros - startMicros);*/
-	afooptr= moveandpause;
+	afooptr= moveandpause_LegsMNGino;
 }
 
 /*
@@ -106,24 +112,22 @@ void setup() {
 */
 void loop() {
 	  currentTime = millis();
-	//  ONDoOnceEvery(1000, _0_10_msCounterStampCashed, currentTime, afooptr);
+	  
 	  /*if (currentTime - previousTimeSerialPrintPotentiometer > timeIntervalSerialPrint) {
 		  previousTimeSerialPrintPotentiometer = currentTime;
 		  Serial.println(savedval);*/
   //do once
 		 // }
 
-
-	//ReadPotpins();
-	//for (int x = 0; x < 20; x++) {
-	//	 
-	//	  
-	//	 
-	//	 
+	//for (int x = 0; x < 6; x++) {
+		 
+		ONDoOnceEvery(2000, _0_10_msCounterStampCashed, currentTime, afooptr);
+		 
+		 
 	//	moveandpause();
 	//	}
 	////Serial.println(pval10_LS_lR);
-	 loopTask();
+	// loopTask();
 }
 void loopTask() {
   // put your main code here, to run repeatedly:

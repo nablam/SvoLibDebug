@@ -1,4 +1,7 @@
+#define LOGDEBUG
+
 #pragma region pots
+
 
 #define PotReadScale 1000
 #define DeadZoneHalfAmplitude 16
@@ -97,11 +100,12 @@ int deadzonefilter(int argval, bool argisRot) {
 	}
 
 void printRawPotValues() {
+#ifdef LOGDEBUG
 	String outstr = 
 		"LS lr" + String( pval10_LS_lR)+ " ud "+ String(pval9_LS_dU) + "\n" +
 		"RS lr" + String(pval12_RS_lR) + " ud " + String(pval11_RS_uD)+"\n" + 
 		"L rot " + String(pval8_LS_rot) + " R rot " + String(pval13_RS_rot) + "\n";
 	Serial.print(outstr);
-	
+#endif
 	}
 

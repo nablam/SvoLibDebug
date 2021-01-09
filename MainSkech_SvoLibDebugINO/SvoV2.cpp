@@ -8,7 +8,7 @@
 #include "SvoV2.h"
 
 */
-// #define LOGDEBUG
+ #define LOGDEBUG
 #if defined(ARDUINO_ARCH_AVR)
 #include <avr/interrupt.h>
 #include <Arduino.h>
@@ -276,12 +276,12 @@ void SvoV2::Detach()
 void SvoV2::PrintMe() {
     
     Serial.print("  _id|"); Serial.print(this->_id);
-    Serial.print("  Pin|"); Serial.print(StaticSvoV2sArra[this->_id].Pin.pinNum);
-    Serial.print("  zero|"); Serial.print( this->_GlobalZeroAngle);
-    Serial.println("");
+   // Serial.print("  Pin|"); Serial.print(StaticSvoV2sArra[this->_id].Pin.pinNum);
+   // Serial.print("  zero|"); Serial.print( this->_GlobalZeroAngle);
+  //  Serial.println("");
 
     }
-void SvoV2::ProcessRawAnglesSpeedMove(uint8_t speed, int argA0, int argDzprime, int argA1 , int argA2) {
+int SvoV2::ProcessRawAnglesGetDiffs(  int argA0, int argDzprime, int argA1 , int argA2) {
     int ConvertedAngle = 0;
     switch (this->_id)
         {
@@ -330,38 +330,44 @@ void SvoV2::ProcessRawAnglesSpeedMove(uint8_t speed, int argA0, int argDzprime, 
             case 11://t
                 ConvertedAngle = 180 - argA2 + this->_GlobalMin;
                 break;
-
-               /* if (_isForward)
-                    {
-
-                    ConvertedAngle = 180 - argAngle + this->_GlobalMin;
-                    }
-                else {
-                    ConvertedAngle = this->_GlobalMin - (180 - argAngle);
-                    }*/
         }
     ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
 
+    _lastRequestedValue = _CurRequestedValue;
+    _CurRequestedValue = ConvertedAngle;
      
-    Speedmove(ConvertedAngle, speed);
+    int diffOutput = abs(_lastRequestedValue - _CurRequestedValue);
+
+    #ifdef LOGDEBUG
+    if (this->_id < 3) {
+       
+        _timesSpeedmorerequested++;
+        Serial.print(_timesSpeedmorerequested); Serial.print("SV id="); Serial.print(this->_id);
+        Serial.print(" last= "); Serial.print(_lastRequestedValue);  Serial.print("-"); Serial.print("new="); Serial.print(_CurRequestedValue); Serial.print(" = "); Serial.println(diffOutput);
+        }
+
+    #endif // LOGDEBUG
+
+    return diffOutput;
+  
+
     }
 int cnt = 0;
 //speed=0 - Full speed, identical to write ,speed=1 - Minimum speed , speed=255 - Maximum speed
 void SvoV2::Speedmove(int value, uint8_t speed ) {
-    cnt++;
-    _timesSpeedmorerequested++;
+   // cnt++;
+   
    // int valueMs = ConvertValueToTimmedMS(value);
 #ifdef LOGDEBUG
      
-  
-    _lastRequestedValue= _CurRequestedValue;
-    _CurRequestedValue = value;
-
-    if (this->_id == 1) {
-        Serial.print(_timesSpeedmorerequested); Serial.print(" id="); Serial.print(this->_id);
-        Serial.print(" last= "); Serial.print(_lastRequestedValue);  Serial.print(" "); Serial.print("new="); Serial.println(_CurRequestedValue);
+    if (this->_id < 3) {
+        Serial.print("id"); Serial.print(_id); Serial.print(" reqval="); Serial.print(_CurRequestedValue); Serial.print(" coef="); Serial.print(SpeedCoef); Serial.print(" speed="); Serial.println(speed);
         }
+  
+
 #endif // LOGDEBUG
+  
+
     // This fuction is a copy of write and witeMicroseconds but value will be saved
     // in target instead of in ticks in the servo structure and speed will be save
     // there too.
@@ -383,12 +389,6 @@ void SvoV2::Speedmove(int value, uint8_t speed ) {
                 value = MCRO_SVOV2_MIN();
             else if (value > MCRO_SVOV2_MAX())
                 value = MCRO_SVOV2_MAX();
-
-           // value = value - TRIM_DURATION;
-            //value = MCRO_usToTicks(value);  // convert to ticks after compensating for interrupt overhead - 12 Aug 2009
-          //  if (this->_id == 1) { Serial.print("  " );   Serial.print(" "); Serial.print("val1=");   Serial.println(value); }
-          //  Serial.print("valt=");   Serial.print(value);
-            // Set speed and direction
            
             uint8_t oldSREG = SREG;
             cli();
@@ -400,6 +400,17 @@ void SvoV2::Speedmove(int value, uint8_t speed ) {
     else {
         Write(value);
         }
+    }
+void SvoV2::Speedmove(uint8_t speed,   bool argDoMove) {
+
+
+    if (this->_id < 3) {
+        Serial.print("id"); Serial.print(_id); Serial.print(" moving to ="); Serial.print(_CurRequestedValue); Serial.print(" coef="); Serial.print(SpeedCoef); Serial.println(" speed="); 
+        }
+
+    if (argDoMove) 
+    this->Speedmove(this->_CurRequestedValue, speed);
+    
     }
 bool SvoV2::Attached()
     {
@@ -452,6 +463,10 @@ void  SvoV2::SitMe() {
         else
     this->Speedmove(40, 0);
     }
+int SvoV2::GetLastRequestedVal() {
+    return this->_lastRequestedValue;
+    }
+
 #pragma endregion
 #pragma region PRIV
 void SvoV2::SetupById(int argId) {

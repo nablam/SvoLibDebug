@@ -19,9 +19,12 @@ class LegMatik {
 	public:
 	//LegMatik();
 	LegMatik(SvoV2*  argArra, uint8_t argShoulderIndex, uint8_t argArmIndex, uint8_t argCalfIndex, char argCharId);
+	void XYZ_inputConversion(int argT, int argD, int argH );
+	void CalcOptimalSpeed();
+	void MoveTo_curReqval_BySpeedoeff(uint8_t argInputSpeed, bool argdomove);
 	//void TestMyServos();
 	//void PrintAngles(int argT, int argD, int argH);
-	void MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool argmove);
+
 	
 	char _charId;
 #pragma endregion
@@ -31,6 +34,10 @@ class LegMatik {
 	SvoV2* _myShoulder;
 	SvoV2* _myArm;
 	SvoV2* _myCalf;
+	SvoV2* _myMembers[3] = { _myShoulder ,_myArm,_myCalf };
+	int diffs[3];
+	float SpeedPercentCoefs[3];
+	
 
 	float GetRawAngle(float argOposit, float argAdjascent);
 
@@ -40,7 +47,7 @@ class LegMatik {
 
 	float sqrt88x(const float x);
 
-	void XYZ_inputConversion(int argT, int argD, int argH, bool argDoMove, int argspeed);
+	
 #pragma endregion
 	};
 

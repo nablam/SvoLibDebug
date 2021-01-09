@@ -3,7 +3,7 @@
 // 
 
 #include "LegMatik.h"
- //#define LOGDEBUG
+  #define LOGDEBUG
 
 #pragma region PUBS
 //LegMatik::LegMatik() {}
@@ -12,6 +12,9 @@ LegMatik::LegMatik(SvoV2* argArra, uint8_t argShoulderIndex, uint8_t argArmIndex
 	_myArm= &argArra[argArmIndex];;
 	_myCalf=& argArra[argCalfIndex];;
 	_charId = argcharId;
+	_myMembers[0] = _myShoulder;
+	_myMembers[1] = _myArm;
+	_myMembers[2] = _myCalf;
 	}
 //void LegMatik::TestMyServos() {
 //	uint8_t a, b, c = 0;
@@ -40,8 +43,20 @@ LegMatik::LegMatik(SvoV2* argArra, uint8_t argShoulderIndex, uint8_t argArmIndex
 //void LegMatik::PrintAngles(int argT, int argD, int argH) {
 //	Serial.println(XYZ_inputConversion(argT, argD, argH, false, 0));
 //	}
-void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool argmove) {
-	XYZ_inputConversion(argT, argD, argH, argmove, argspeed);
+void LegMatik::MoveTo_curReqval_BySpeedoeff(uint8_t argInputSpeed, bool argdomove) {
+	/*_myShoulder ->Speedmove();
+	_myArm = &argArra[argArmIndex];;
+	_myCalf =*/
+#ifdef LOGDEBUG
+	if (this->_charId == 'a') {
+		Serial.println("**** MoveTo_curReqval_BySpeedoeff *****");
+		Serial.print(" speed global"); Serial.println(argInputSpeed);
+		 
+		}
+#endif
+	for (int m = 0; m < 3; m++) {
+		_myMembers[m]->Speedmove(argInputSpeed, argdomove);
+		}
 	}
 
 #pragma endregion
@@ -164,8 +179,17 @@ void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool ar
 		return u.x;
 		}
 
-	void LegMatik::XYZ_inputConversion(int argT, int argD, int argH, bool argDoMove, int argspeed) {
+	void LegMatik::XYZ_inputConversion(int argT, int argD, int argH   ) {
 		
+			#ifdef LOGDEBUG
+			if (this->_charId == 'a') {
+				Serial.println(" ProcessRawAnglesGetDiffs for leg ");
+				Serial.println(String(this->_charId)); Serial.print(" ["); Serial.print(argT); Serial.print(","); Serial.print(argD); Serial.print(","); Serial.print(argH); Serial.println("]");
+				//Serial.print(""); Serial.println(String(this->_charId) + " [" + String(argT) + "," + String(argT) + "," + String(argT) + "]");
+				}
+		#endif
+
+
 		float Zprime = GetZprime(argH, argT);
 		float S0Angle = GetRawAngle(argT, Zprime);
 
@@ -185,22 +209,91 @@ void LegMatik::MoveToBySpeed(int argT, int argD, int argH, int argspeed, bool ar
 		int rounded1 = round(S1Angle);
 		int rounded2 = round(S2Angle);
 
-		if (argDoMove) {
-			_myShoulder->ProcessRawAnglesSpeedMove( argspeed, rounded0, roundedDzprime, rounded1, rounded2);
-			_myArm->ProcessRawAnglesSpeedMove(argspeed, rounded0, roundedDzprime, rounded1, rounded2);
-			_myCalf->ProcessRawAnglesSpeedMove(argspeed, rounded0, roundedDzprime, rounded1, rounded2);
-			}
-		else
-			{
+		
+			diffs[0]=	_myShoulder->ProcessRawAnglesGetDiffs(   rounded0, roundedDzprime, rounded1, rounded2);
+			diffs[1] = _myArm->ProcessRawAnglesGetDiffs( rounded0, roundedDzprime, rounded1, rounded2);
+			diffs[2] = _myCalf->ProcessRawAnglesGetDiffs(  rounded0, roundedDzprime, rounded1, rounded2);
+			
+		 
 		#ifdef LOGDEBUG
-			String Outputstr = "";
-			String pl = ",";
-			Outputstr = " Legid=" + (char)this->_charId + pl + " "+ rounded0 + pl + roundedDzprime+ pl+ rounded1 + pl + rounded2 ;
-			Serial.print(""); Serial.println(Outputstr);
+		/*	if (this->_charId == 'a') {
+				Serial.println(" ProcessRawAnglesGetDiffs");
+				String Outputstr = "";
+				String pl = ",";
+				Outputstr = " Legid=" + (char)this->_charId + pl + " " + rounded0 + pl + roundedDzprime + pl + rounded1 + pl + rounded2;
+				Serial.print(""); Serial.println(Outputstr);
+				}*/
+			
 		#endif // LOGDEBUG
+		}
+
+	//largest displacement servo will run at speeedCoefficient = 1.0  * inputspeed
+	// adjust pseeds of other two proportionally to the disp diff vs 1.0 speed
+	void LegMatik::CalcOptimalSpeed() {
+		int temp_L_Diff = 0;
+		int temp_M_Diff = 0;
+		int temp_s_Diff = 6000;
+		 
+	 
+		int indx_L = 0;
+		int indx_M = 2;
+		int indx_s = 1;
+		
+	 
+		for (int i = 0; i < 3; i++) {
+			if (diffs[i] >= temp_L_Diff) {
+				temp_L_Diff = diffs[i];
+				indx_L = i;
+				}
+			if (diffs[i] < temp_s_Diff) {
+				temp_s_Diff = diffs[i];
+				indx_s = i;
+				}
 			}
+
+		 
+		if (indx_L == 0 && indx_s == 2 || indx_L == 2 && indx_s == 0) { indx_M = 1; }
+		else if (indx_L == 1 && indx_s == 2 || indx_L == 2 && indx_s == 1) { indx_M = 0; }
+		 
+		float SpeedCoef_fors;
+		float SpeedCoef_forM;
+		if (temp_L_Diff==0) {
+			diffs[indx_L] = diffs[indx_M] = diffs[indx_s] = 0.0;
+		  SpeedCoef_forM = 1.0;
+		  SpeedCoef_fors = 1.0;
+			}
+		else {
+
+
+			SpeedCoef_forM = (float)diffs[indx_M] / (float)diffs[indx_L];
+			SpeedCoef_fors = (float)diffs[indx_s] / (float)diffs[indx_L];
+		  //if (SpeedCoef_forM < 2.0)SpeedCoef_forM = 2.0;
+		  //if (SpeedCoef_fors < 2.0)SpeedCoef_fors = 2.0;
+			}
+
+		SpeedPercentCoefs[indx_L] = 100.0;
+		SpeedPercentCoefs[indx_s] = SpeedCoef_forM*100.0;
+		SpeedPercentCoefs[indx_M] = SpeedCoef_fors*100.0;
+	
+
+		this->_myMembers[indx_L]->SpeedCoef = SpeedPercentCoefs[indx_L];
+		this->_myMembers[indx_s]->SpeedCoef = SpeedPercentCoefs[indx_s];
+		this->_myMembers[indx_M]->SpeedCoef = SpeedPercentCoefs[indx_M];
+		//ok need suoer clean
+		
+	#ifdef LOGDEBUG
+		if((char)this->_charId=='a'){
+		Serial.print("CalcOptimalSpeed for legid  ");	Serial.println( this->_charId);
+	
+		Serial.print("L Diff= svoId."); this->_myMembers[indx_L]->PrintMe(); Serial.print( "Diff->"); Serial.println(diffs[indx_L]);
+		Serial.print("M Diff= svoId."); this->_myMembers[indx_M]->PrintMe(); Serial.print("Diff->"); Serial.println(diffs[indx_M]);
+		Serial.print("s Diff= svoId."); this->_myMembers[indx_s]->PrintMe(); Serial.print("diff->"); Serial.println(diffs[indx_s]);
+			}
+	#endif // LOGDEBUG
+
 		
 		}
+
 #pragma endregion
 #pragma region privs
 

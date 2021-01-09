@@ -26,7 +26,7 @@ void IncremantIndex(int& argindex, int& brgindex, int& crgindex, int& drgindex) 
 	}
 
 int cntCap = 0;
-void moveandpause() {
+void moveandpause_LegsMNGino() {
 	//delay(DelayGlobal);
 	cntCap++;
 	if (cntCap > 100) {
@@ -34,11 +34,24 @@ void moveandpause() {
 		return;
 		}
 	Serial.print(cntCap); Serial.println(" *********************");
-	FL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
-	FR.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
-	BL.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
-	BR.MoveToBySpeed(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2], positionsTest[i_a][3], togg);
+	 
+	FL.XYZ_inputConversion(positionsTest[i_a][0], positionsTest[i_a][1], positionsTest[i_a][2]);
+	FR.XYZ_inputConversion(positionsTest[i_b][0], positionsTest[i_b][1], positionsTest[i_b][2]);
+	BL.XYZ_inputConversion(positionsTest[i_c][0], positionsTest[i_c][1], positionsTest[i_c][2]);
+	BR.XYZ_inputConversion(positionsTest[i_d][0], positionsTest[i_d][1], positionsTest[i_d][2]);
+
+
 	IncremantIndex(i_a, i_b, i_c, i_d);
+
+	FL.CalcOptimalSpeed();
+	FR.CalcOptimalSpeed();
+	BL.CalcOptimalSpeed();
+	BR.CalcOptimalSpeed();
+
+	FL.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	FR.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	BL.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	BR.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
 	}
 
 
@@ -64,7 +77,7 @@ int manualTinv;
 int manualH;
 int manualHInv;
 
-void CalculateForSlide() {
+void ControlWithPotsForSlide() {
 	  manualD= map(_masterjds.LS_dU, 0, PotReadScale, -11, 11);
 	  manualDinv = map(_masterjds.LS_dU, 0, PotReadScale, 11, -11);
 	  manualT= map(_masterjds.LS_lR, 0, PotReadScale, -11, 11);
@@ -86,22 +99,41 @@ void DecideTiltPivot() {
 
 	}
 void SlideFlat() {
-	CalculateForSlide();
-	FL.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
-	FR.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
-	BL.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
-	BR.MoveToBySpeed(manualT, manualD, manualH, SpeedGlobal, togg);
+	ControlWithPotsForSlide();
+	MoveMembersTOPointTo(manualT, manualD, manualH);	 
 	}
 
-void SlideFor() {
-	
+void MoveMembersTOPointTo(int t, int d, int h) {
+	FL.XYZ_inputConversion(t, d, h);
+	FR.XYZ_inputConversion(t, d, h);
+	BL.XYZ_inputConversion(t, d, h);
+	BR.XYZ_inputConversion(t, d, h);
+	FL.CalcOptimalSpeed();
+	FR.CalcOptimalSpeed();
+	BL.CalcOptimalSpeed();
+	BR.CalcOptimalSpeed();
+
+	FL.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	FR.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	BL.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	BR.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
 	}
 
  
 void PivotMid() {
-	CalculateForSlide();
-	FL.MoveToBySpeed(manualT, manualD, manualHInv, SpeedGlobal, togg);
-	FR.MoveToBySpeed(manualT, manualD, manualHInv, SpeedGlobal, togg);
-	BL.MoveToBySpeed(manualTinv, manualD, manualH, SpeedGlobal, togg);
-	BR.MoveToBySpeed(manualTinv, manualD, manualH, SpeedGlobal, togg);
+	/*ControlWithPotsForSlide();
+	FL.XYZ_inputConversion(manualT, manualD, manualHInv);
+	FR.XYZ_inputConversion(manualT, manualD, manualHInv);
+	BL.XYZ_inputConversion(manualTinv, manualD, manualH);
+	BR.XYZ_inputConversion(manualTinv, manualD, manualH);
+	FL.CalcOptimalSpeed();
+	FR.CalcOptimalSpeed();
+	BL.CalcOptimalSpeed();
+	BR.CalcOptimalSpeed();
+
+	FL.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	FR.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	BL.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	BR.MoveTo_curReqval_BySpeedoeff(SpeedGlobal, togg);
+	*/
 	}

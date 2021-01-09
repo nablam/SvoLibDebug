@@ -72,14 +72,19 @@ class SvoV2 {
 	SvoV2( );
 	uint8_t AttachSelf();
 	void Detach();
-	void ProcessRawAnglesSpeedMove(uint8_t speed, int argA0, int argDzprime, int argA1, int argA2t);
+	int ProcessRawAnglesGetDiffs(int argA0, int argDzprime, int argA1, int argA2t);
 	void Speedmove(int value, uint8_t speed);
+	void Speedmove( uint8_t speed,bool argDMove);
 	bool Attached();
 	bool IsMoving();
 	void Stop();
 	void ZeroMe();
 	void SitMe();
 	void PrintMe();
+	int GetLastRequestedVal();
+
+	float SpeedCoef;
+	int AdjustedSpeed;
 
 	private:
 	void SetupById(int argId);
@@ -118,6 +123,7 @@ class SvoV2 {
 
 	int EmergencyUm;
 	int _timesSpeedmorerequested = 0;
+
 	};
 
 #endif
