@@ -6,10 +6,11 @@
 
 #include "SvoV2.h"
 #include "LegMatik.h"
+ 
 #pragma region declarations
-const int SpeedGlobal = 10;
+const int SpeedGlobal = 150;
 const int DelayGlobal = 4000;
-const int SpeedGlobalSlow = SpeedGlobal/2;
+const int SpeedGlobalSlow = 30;
 
 bool togg = false;
 const int LoopLen = 12; //ms
@@ -18,16 +19,17 @@ const int LoopLen = 12; //ms
 
 //-----------------------------------------------------------------------------positions array indecies
 const int totalPositions = 5;
+int i_a_last = -1;
 int i_a = 0;
 int i_b = 1;
 int i_c = 2;
 int i_d = 3;
 int positions[totalPositions][4] = {
 	{0,0,12,SpeedGlobal },
-	{0,8,19,SpeedGlobalSlow},
-	{0,4,19,SpeedGlobalSlow},
-	{0,-4,19,SpeedGlobalSlow},
-	{0,-4,19,SpeedGlobalSlow},
+	{0,8,19,SpeedGlobal},
+	{0,4,19,SpeedGlobal},
+	{0,-4,19,SpeedGlobal},
+	{0,-4,19,SpeedGlobal},
 	//{0,-8,19,SpeedGlobalSlow}
 	};
 
@@ -38,12 +40,35 @@ int positionsTest[totalPositions][4] = {
 	//{0,-4,21,SpeedGlobalSlow},
 	//{0,-8,21,SpeedGlobalSlow},
 	////{0,-8,21,SpeedGlobalSlow}
-	{0,1,14,SpeedGlobal },
-	{0,1,14,SpeedGlobalSlow},
-	{0,0,21,SpeedGlobalSlow},
-	{0,11,21,SpeedGlobalSlow},
-	{0,-8,21,SpeedGlobalSlow},
+	{0,0,21,SpeedGlobal },
+	{0,0,20,SpeedGlobal},
+	{0,-4,9,SpeedGlobal},
+	{0,-4,9,SpeedGlobal},
+	{0,0,21,SpeedGlobal},
 	//{0,-8,21,SpeedGlobalSlow}
+	};
+
+int AnglesTest[totalPositions][4] = {
+	 
+
+	{0,90,90,SpeedGlobal },
+	{0,180,180,SpeedGlobal},
+	{0,90,90,SpeedGlobal},
+	{0,270,270,SpeedGlobal},
+	{0,90,90,SpeedGlobal},
+	/*{0,90,90,SpeedGlobal },
+	{0,270,180,SpeedGlobal},
+	{0,90,90,SpeedGlobal},
+	{0,270,120,SpeedGlobal},
+	{0,90,90,SpeedGlobal},*/
+
+//		{0,90,90,SpeedGlobal },
+// {0,90,90,SpeedGlobal },
+//{0,90,90,SpeedGlobal },
+//{0,90,90,SpeedGlobal },
+//{0,90,90,SpeedGlobal },
+
+ 
 	};
 //----------------------------------------------------------------------------------------------------
 
@@ -95,7 +120,8 @@ void setup() {
 	endMicros = micros();
 
 	Serial.println(endMicros - startMicros);*/
-	afooptr= moveandpause_LegsMNGino;
+	//afooptr= moveandpause_LegsMNGino;
+	afooptr = DoAngleTest;
 }
 
 /*
@@ -121,7 +147,7 @@ void loop() {
 
 	//for (int x = 0; x < 6; x++) {
 		 
-		ONDoOnceEvery(2000, _0_10_msCounterStampCashed, currentTime, afooptr);
+	ONDoOnceEvery(5000, _0_10_msCounterStampCashed, currentTime, afooptr);
 		 
 		 
 	//	moveandpause();

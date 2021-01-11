@@ -3,7 +3,7 @@
 // 
 
 #include "LegMatik.h"
-  #define LOGDEBUG
+ #define LOGDEBUG
 
 #pragma region PUBS
 //LegMatik::LegMatik() {}
@@ -229,7 +229,7 @@ void LegMatik::MoveTo_curReqval_BySpeedoeff(uint8_t argInputSpeed, bool argdomov
 
 	//largest displacement servo will run at speeedCoefficient = 1.0  * inputspeed
 	// adjust pseeds of other two proportionally to the disp diff vs 1.0 speed
-	void LegMatik::CalcOptimalSpeed() {
+	void LegMatik::CalcOptimalSpeed_injectCoeffs() {
 		int temp_L_Diff = 0;
 		int temp_M_Diff = 0;
 		int temp_s_Diff = 6000;
@@ -238,25 +238,69 @@ void LegMatik::MoveTo_curReqval_BySpeedoeff(uint8_t argInputSpeed, bool argdomov
 		int indx_L = 0;
 		int indx_M = 2;
 		int indx_s = 1;
-		
-	 
-		for (int i = 0; i < 3; i++) {
-			if (diffs[i] >= temp_L_Diff) {
-				temp_L_Diff = diffs[i];
-				indx_L = i;
+		//0 is largest
+		if (diffs[0] >= diffs[1] && diffs[0] >= diffs[2]) {
+			indx_L = 0;
+			temp_L_Diff = diffs[indx_L];
+			//1 is mid 2 is small
+			if (diffs[1] >= diffs[2]) {
+				indx_M = 1;
+				temp_M_Diff = diffs[indx_M];
+				indx_s = 2;
+				temp_s_Diff = diffs[indx_s];
 				}
-			if (diffs[i] < temp_s_Diff) {
-				temp_s_Diff = diffs[i];
-				indx_s = i;
+			else
+				{
+				indx_M = 2;
+				temp_M_Diff = diffs[indx_M];
+				indx_s = 1;
+				temp_s_Diff = diffs[indx_s];
+				}
+		}
+		else
+			//1 is largest
+			if (diffs[1] >= diffs[0] && diffs[1] >= diffs[2]) {
+				indx_L = 1;
+				temp_L_Diff = diffs[indx_L];
+				//0 is mid 2 is small
+				if (diffs[0] >= diffs[2]) {
+					indx_M = 0;
+					temp_M_Diff = diffs[indx_M];
+					indx_s = 2;
+					temp_s_Diff = diffs[indx_s];
+					}
+				else //2 0 
+					{
+					indx_M = 2;
+					temp_M_Diff = diffs[indx_M];
+					indx_s = 0;
+					temp_s_Diff = diffs[indx_s];
+					}
+				}
+			else		//2 is largest
+		if (diffs[2] >= diffs[0] && diffs[2] >= diffs[1]) {
+			indx_L = 2;
+			temp_L_Diff = diffs[indx_L];
+			//1 is mid 0 is small
+			if (diffs[1] >= diffs[0]) {
+				indx_M = 1;
+				temp_M_Diff = diffs[indx_M];
+				indx_s = 0;
+				temp_s_Diff = diffs[indx_s];
+				}
+			else //0 1 
+				{
+				indx_M = 0;
+				temp_M_Diff = diffs[indx_M];
+				indx_s = 1;
+				temp_s_Diff = diffs[indx_s];
 				}
 			}
 
-		 
-		if (indx_L == 0 && indx_s == 2 || indx_L == 2 && indx_s == 0) { indx_M = 1; }
-		else if (indx_L == 1 && indx_s == 2 || indx_L == 2 && indx_s == 1) { indx_M = 0; }
-		 
+
 		float SpeedCoef_fors;
 		float SpeedCoef_forM;
+		float SpeedCoef_forL;
 		if (temp_L_Diff==0) {
 			diffs[indx_L] = diffs[indx_M] = diffs[indx_s] = 0.0;
 		  SpeedCoef_forM = 1.0;
@@ -264,18 +308,17 @@ void LegMatik::MoveTo_curReqval_BySpeedoeff(uint8_t argInputSpeed, bool argdomov
 			}
 		else {
 
-
-			SpeedCoef_forM = (float)diffs[indx_M] / (float)diffs[indx_L];
-			SpeedCoef_fors = (float)diffs[indx_s] / (float)diffs[indx_L];
-		  //if (SpeedCoef_forM < 2.0)SpeedCoef_forM = 2.0;
-		  //if (SpeedCoef_fors < 2.0)SpeedCoef_fors = 2.0;
+			SpeedCoef_forL = 100.0;// the servo at largetsindex will need to run full speed. 100 * speed/100
+			SpeedCoef_forM = ((float)diffs[indx_M] / (float)diffs[indx_L]);//the servo at index of medium diff will run at speed prportional to that of large (100)
+			SpeedCoef_fors = ((float)diffs[indx_s] / (float)diffs[indx_L]);//the servo at index of medium diff will run at speed prportional to that of large (100)
+		
 			}
 
 		SpeedPercentCoefs[indx_L] = 100.0;
-		SpeedPercentCoefs[indx_s] = SpeedCoef_forM*100.0;
-		SpeedPercentCoefs[indx_M] = SpeedCoef_fors*100.0;
+		SpeedPercentCoefs[indx_M] = SpeedCoef_forM*100.0;
+		SpeedPercentCoefs[indx_s] = SpeedCoef_fors*100.0;
 	
-
+		//my servo at index of large will take the coef from coeff at large 
 		this->_myMembers[indx_L]->SpeedCoef = SpeedPercentCoefs[indx_L];
 		this->_myMembers[indx_s]->SpeedCoef = SpeedPercentCoefs[indx_s];
 		this->_myMembers[indx_M]->SpeedCoef = SpeedPercentCoefs[indx_M];

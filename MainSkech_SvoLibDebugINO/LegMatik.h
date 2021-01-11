@@ -20,7 +20,7 @@ class LegMatik {
 	//LegMatik();
 	LegMatik(SvoV2*  argArra, uint8_t argShoulderIndex, uint8_t argArmIndex, uint8_t argCalfIndex, char argCharId);
 	void XYZ_inputConversion(int argT, int argD, int argH );
-	void CalcOptimalSpeed();
+	void CalcOptimalSpeed_injectCoeffs();
 	void MoveTo_curReqval_BySpeedoeff(uint8_t argInputSpeed, bool argdomove);
 	//void TestMyServos();
 	//void PrintAngles(int argT, int argD, int argH);

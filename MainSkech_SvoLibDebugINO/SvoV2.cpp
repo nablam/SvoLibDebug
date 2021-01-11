@@ -8,7 +8,7 @@
 #include "SvoV2.h"
 
 */
- #define LOGDEBUG
+ //#define LOGDEBUG
 #if defined(ARDUINO_ARCH_AVR)
 #include <avr/interrupt.h>
 #include <Arduino.h>
@@ -360,9 +360,9 @@ void SvoV2::Speedmove(int value, uint8_t speed ) {
    // int valueMs = ConvertValueToTimmedMS(value);
 #ifdef LOGDEBUG
      
-    if (this->_id < 3) {
+  /*  if (this->_id < 3) {
         Serial.print("id"); Serial.print(_id); Serial.print(" reqval="); Serial.print(_CurRequestedValue); Serial.print(" coef="); Serial.print(SpeedCoef); Serial.print(" speed="); Serial.println(speed);
-        }
+        }*/
   
 
 #endif // LOGDEBUG
@@ -404,13 +404,25 @@ void SvoV2::Speedmove(int value, uint8_t speed ) {
 void SvoV2::Speedmove(uint8_t speed,   bool argDoMove) {
 
 
-    if (this->_id < 3) {
-        Serial.print("id"); Serial.print(_id); Serial.print(" moving to ="); Serial.print(_CurRequestedValue); Serial.print(" coef="); Serial.print(SpeedCoef); Serial.println(" speed="); 
+    if (this->_id <3) {
+        Serial.print("id"); Serial.print(_id); Serial.print(" moving to ="); Serial.print(_CurRequestedValue); Serial.print(" _coef="); Serial.println(SpeedCoef);  
         }
 
-    if (argDoMove) 
-    this->Speedmove(this->_CurRequestedValue, speed);
-    
+    if (SpeedCoef < 1.0)SpeedCoef = 100.0f;
+
+    uint8_t speedCopmensated = (speed * SpeedCoef) / 100;
+   
+   // #ifdef LOGDEBUG
+        if (this->_id<3) {
+            Serial.print("speedarg ="); Serial.print(speed); Serial.print("*"); Serial.print(SpeedCoef); Serial.print("===="); Serial.println(speedCopmensated);
+       
+        
+    //#endif // LOGDEBUG
+
+            if (argDoMove) 
+        this->Speedmove(this->_CurRequestedValue, speedCopmensated);
+
+        }
     }
 bool SvoV2::Attached()
     {
