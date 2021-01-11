@@ -121,7 +121,7 @@ void setup() {
 
 	Serial.println(endMicros - startMicros);*/
 	//afooptr= moveandpause_LegsMNGino;
-	afooptr = DoAngleTest;
+	//nsbafooptr = DoAngleTest;
 }
 
 /*
@@ -139,21 +139,11 @@ void setup() {
 void loop() {
 	  currentTime = millis();
 	  
-	  /*if (currentTime - previousTimeSerialPrintPotentiometer > timeIntervalSerialPrint) {
-		  previousTimeSerialPrintPotentiometer = currentTime;
-		  Serial.println(savedval);*/
-  //do once
-		 // }
-
-	//for (int x = 0; x < 6; x++) {
+	 
 		 
-	ONDoOnceEvery(5000, _0_10_msCounterStampCashed, currentTime, afooptr);
+	  ONDoOnceEvery(5000, _0_10_msCounterStampCashed, currentTime, afooptr);
 		 
-		 
-	//	moveandpause();
-	//	}
-	////Serial.println(pval10_LS_lR);
-	// loopTask();
+ 
 }
 void loopTask() {
   // put your main code here, to run repeatedly:
@@ -167,7 +157,7 @@ void loopTask() {
 			{
 			//--------------------------READ
 				case 0:
-					ReadPotpins();
+				 	ReadPotpins();
 					break;
 				case 1:
 					break;
@@ -187,7 +177,7 @@ void loopTask() {
 					break;
 					//--------------------------write
 				case 8:
-					DecideTiltPivot();
+				 	DecideTiltPivot();
 					break;
 				case 9:
 					break;
