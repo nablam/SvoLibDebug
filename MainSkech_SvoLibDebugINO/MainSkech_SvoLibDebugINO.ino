@@ -8,9 +8,9 @@
 #include "LegMatik.h"
  
 #pragma region declarations
-const int SpeedGlobal = 150;
-const int DelayGlobal = 4000;
-const int SpeedGlobalSlow = 30;
+const int SpeedGlobal = 100;
+const int DelayGlobal = 8000;
+const int SpeedGlobalSlow = 100;
 
 bool togg = false;
 const int LoopLen = 12; //ms
@@ -97,8 +97,8 @@ int savedval = 0;
 #pragma endregion
 
 #pragma region staticobjectsInit
-SvoV2 s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
-SvoV2 SVOarra[12] = { s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11 };
+SvoV2 s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,s12,s13;
+SvoV2 SVOarra[14] = { s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13 };
 SvoV2* sarraptr = SVOarra;
 LegMatik FL(sarraptr, 0, 1, 2, 'a');
 LegMatik FR(sarraptr, 3, 4, 5, 'b');
@@ -108,7 +108,7 @@ LegMatik BR(sarraptr, 9, 10, 11, 'd');
 
 void setup() {
 	Serial.begin(115200);
-	for (int x = 0; x < 12; x++) {
+	for (int x = 0; x < 14; x++) {
 		 if(!SVOarra[x].Attached())
 		SVOarra[x].AttachSelf();
 		SVOarra[x].ZeroMe();
@@ -121,7 +121,7 @@ void setup() {
 
 	Serial.println(endMicros - startMicros);*/
 	//afooptr= moveandpause_LegsMNGino;
-	//nsbafooptr = DoAngleTest;
+	 afooptr = DoAngleTest;
 }
 
 /*
@@ -138,12 +138,44 @@ void setup() {
 */
 void loop() {
 	  currentTime = millis();
-	  
-	 
-		 
-	  ONDoOnceEvery(5000, _0_10_msCounterStampCashed, currentTime, afooptr);
-		 
  
+	 // ONDoOnceEvery(5000, _0_10_msCounterStampCashed, currentTime, afooptr);
+	 
+	  /*s12.Speedmove(0, SpeedGlobal);
+	  s13.Speedmove(0, SpeedGlobalSlow);
+	  Serial.println(135);
+	  delay(DelayGlobal);*/
+
+
+	  s12.Speedmove(0, SpeedGlobal);
+	  s13.Speedmove(270, SpeedGlobal);
+	  Serial.println(0);
+	  delay(DelayGlobal);
+
+	/*  s12.Speedmove(90, SpeedGlobal);
+	  s13.Speedmove(90, SpeedGlobalSlow);
+	  Serial.println(180);
+	  delay(DelayGlobal);
+
+	  s12.Speedmove(180, SpeedGlobal);
+	  s13.Speedmove(180, SpeedGlobalSlow);
+	  Serial.println(180);
+	  delay(DelayGlobal);*/
+
+	  s12.Speedmove(270, SpeedGlobal);
+	  s13.Speedmove(0, SpeedGlobalSlow);
+	  Serial.println(270);
+	  delay(DelayGlobal);
+
+	/*  s12.Speedmove(270, SpeedGlobal);
+	  s13.Speedmove(180, SpeedGlobalSlow);
+	  Serial.println(180);
+	  delay(DelayGlobal);
+
+	  s12.Speedmove(270, SpeedGlobal);
+	  s13.Speedmove(270, SpeedGlobal);
+	  Serial.println(270);
+	  delay(DelayGlobal);*/
 }
 void loopTask() {
   // put your main code here, to run repeatedly:

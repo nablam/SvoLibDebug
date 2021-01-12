@@ -286,16 +286,16 @@ int SvoV2::ProcessRawAnglesGetDiffs(  int argA0, int argDzprime, int argA1 , int
     switch (this->_id)
         {
         //arms
-            case 1://f
+            case 1: 
                 ConvertedAngle = this->_GlobalZeroAngle + argDzprime- argA1;
                 break;
-            case 4://t
+            case 4: 
                 ConvertedAngle = this->_GlobalZeroAngle - argDzprime + argA1;
                 break;
-            case 7://t
+            case 7: 
                 ConvertedAngle = this->_GlobalZeroAngle + argDzprime + argA1;
                 break;
-            case 10://f
+            case 10: 
                 ConvertedAngle = this->_GlobalZeroAngle - argDzprime- argA1;
                 break;
 
@@ -304,13 +304,13 @@ int SvoV2::ProcessRawAnglesGetDiffs(  int argA0, int argDzprime, int argA1 , int
             case 0: //t
                 ConvertedAngle = this->_GlobalZeroAngle + argA0;
                 break;
-            case 3://f
+            case 3: 
                 ConvertedAngle = this->_GlobalZeroAngle + argA0;
                 break;
-            case 6://f
+            case 6: 
                 ConvertedAngle = this->_GlobalZeroAngle - argA0;
                 break;
-            case 9://t
+            case 9: 
                 ConvertedAngle = this->_GlobalZeroAngle - argA0;
                 break;
 
@@ -318,17 +318,23 @@ int SvoV2::ProcessRawAnglesGetDiffs(  int argA0, int argDzprime, int argA1 , int
                 //180 input -> 110
                 //40 input ->270
                 //160 input = 180-160 =40 +110 =150
-            case 2://t
+            case 2: 
                 ConvertedAngle = 180 - argA2 + this->_GlobalMin;
                 break;
-            case 5://t
+            case 5: 
                 ConvertedAngle = 180 - argA2 + this->_GlobalMin;
                 break;
-            case 8://t
+            case 8: 
                 ConvertedAngle = 180 - argA2 + this->_GlobalMin;
                 break;
-            case 11://t
+            case 11: 
                 ConvertedAngle = 180 - argA2 + this->_GlobalMin;
+                break;
+            case 12: 
+                ConvertedAngle = this->_GlobalZeroAngle + argA0;
+                break;
+            case 13: 
+                ConvertedAngle = this->_GlobalZeroAngle - argA0;
                 break;
         }
     ConvertedAngle = constrain(ConvertedAngle, this->_GlobalMin, this->_GlobalMax);
@@ -482,7 +488,7 @@ int SvoV2::GetLastRequestedVal() {
 #pragma endregion
 #pragma region PRIV
 void SvoV2::SetupById(int argId) {
-    argId = constrain(argId, 0, 11);
+    argId = constrain(argId, 0, 13);
 
     switch (argId) {
 
@@ -579,6 +585,21 @@ void SvoV2::SetupById(int argId) {
                 this->_GlobalZeroAngle = this->calfZero;
                 this->_GlobalMax = this->calfMax;
                 this->_GlobalMin = this->calfMin;
+                break;
+                //extra for testing with no constraints
+            case 12:
+                this->_myPin = 36;
+                this->_isForward = true;  
+                this->_GlobalZeroAngle = 135;   //should be 1523 us pulse
+                this->_GlobalMax = 270;         //should be 2534 us pulse
+                this->_GlobalMin = 0;           //should be 512 us pulse
+                break;
+            case 13:
+                this->_myPin = 37;
+                this->_isForward = true; 
+                this->_GlobalZeroAngle = 135;   //should be 1523 us pulse
+                this->_GlobalMax = 270;         //should be 2534 us pulse
+                this->_GlobalMin = 0;           //should be 512 us pulse
                 break;
 
 
